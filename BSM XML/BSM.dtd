@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This Schema defines parameters for a behavioral state machine.  Behavioral state machines are designed to allow for training and testing of animal behaviors.  Intended to control behavior through BSM written in Matlab, but general enough to allow for use in other behavioral control environments.-->
+<!ELEMENT machine (State+, DigitalInput*, AnalogInput*, ConditionVar*, AnalogOutput*, DigitalOutput*, VideoDisplay*, ChooseNextCondition, ChooseStartState)>
+<!ATTLIST machine
+          Name CDATA #REQUIRED
+          Subject CDATA #IMPLIED
+          FirstCondition CDATA #IMPLIED
+          NumConditions CDATA "1"
+          MaximumTrials CDATA #IMPLIED
+          BSMVersion CDATA #IMPLIED>
+<!--Defines the states within the machine.  These states define the current inputs/outputs as well as the current logic for transitioning between states.-->
+<!ELEMENT State (Transition*, AnalogOutput*, DigitalOutput*)>
+<!ATTLIST State
+          Name CDATA #REQUIRED
+          ID CDATA #IMPLIED
+          Interruptable (true | false) "true">
+<!ELEMENT Transition (Logic)>
+<!ATTLIST Transition
+          To CDATA #REQUIRED
+          From CDATA #IMPLIED
+          ID CDATA #IMPLIED>
+<!ELEMENT Logic (#PCDATA)>
+<!ATTLIST Logic
+          ParserName CDATA #IMPLIED
+          ParserCall CDATA #IMPLIED>
+<!ELEMENT AnalogOutput EMPTY>
+<!ATTLIST AnalogOutput
+          VarName CDATA #REQUIRED
+          Function CDATA #REQUIRED>
+<!ELEMENT DigitalOutput EMPTY>
+<!ATTLIST DigitalOutput
+          VarName CDATA #REQUIRED
+          Function CDATA #REQUIRED
+          doStrobe (true | false) "false"
+          StrobeVarName CDATA #IMPLIED>
+<!--Defines the digital input variables.  These should be automatically updated and used in any function.  -->
+<!ELEMENT DigitalInput (Channel+, SourceParameter*)>
+<!ATTLIST DigitalInput
+          SourceName CDATA #IMPLIED
+          SourceType CDATA #IMPLIED
+          Name CDATA #REQUIRED
+          DefaultValue CDATA #IMPLIED>
+<!ELEMENT Channel EMPTY>
+<!ELEMENT SourceParameter EMPTY>
+<!--Defines the analog input variables.  These should be automatically updated and used in any function.  -->
+<!ELEMENT AnalogInput (Channel+, SourceParameter*)>
+<!ATTLIST AnalogInput
+          SourceName CDATA #IMPLIED
+          SourceType CDATA #IMPLIED
+          Name CDATA #REQUIRED
+          DefaultValue CDATA #IMPLIED>
+<!--Defines the variables that depend on the current condition.  These should be automatically updated for each trial (after choosing a condition).  They can be set to constants if desired.  As with the other variables, they can be used in any function.  -->
+<!ELEMENT ConditionVar EMPTY>
+<!ATTLIST ConditionVar
+          Name CDATA #REQUIRED
+          Function CDATA #REQUIRED
+          DefaultValue CDATA #IMPLIED>
+<!--Defines video displays that might be used.  Not currently implemented.-->
+<!ELEMENT VideoDisplay EMPTY>
+<!ATTLIST VideoDisplay
+          Name CDATA #REQUIRED
+          HorizontalResolution CDATA #REQUIRED
+          VerticalResolution CDATA #REQUIRED
+          RefreshRate CDATA #REQUIRED>
+<!--Function to call after trial to choose next condition.-->
+<!ELEMENT ChooseNextCondition (#PCDATA)>
+<!ATTLIST ChooseNextCondition
+          ParserName CDATA #IMPLIED
+          ParserCall CDATA #IMPLIED>
+<!--Function to call to choose the start state for the trial.-->
+<!ELEMENT ChooseStartState (#PCDATA)>
+<!ATTLIST ChooseStartState
+          ParserName CDATA #IMPLIED
+          ParserCall CDATA #IMPLIED>

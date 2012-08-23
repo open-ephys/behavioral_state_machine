@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns="http://www.timbuschman.com/behavioralstatemachine" targetNamespace="http://www.timbuschman.com/behavioralstatemachine" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+  
+  <xs:element name="machine" type="Machine">
+    <xs:annotation>
+      <xs:appinfo>Behavioral State Machine (BSM) Root Node</xs:appinfo>
+      <xs:documentation xml:lang="en">This Schema defines parameters for a behavioral state machine.  Behavioral state machines are designed to allow for training and testing of animal behaviors.  Intended to control behavior through BSM written in Matlab, but general enough to allow for use in other behavioral control environments.</xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  
+  <xs:complexType name="Machine">
+    <xs:annotation>
+      <xs:appinfo>Definition of behavioral state machine (BSM).</xs:appinfo>
+      <xs:documentation xml:lang="en">Contains definition of the behavioral state machine.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="State" type="State" minOccurs="1" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the states within the machine.  These states define the current inputs/outputs as well as the current logic for transitioning between states.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="DigitalInput" type="InputOutputVar" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the digital input variables.  These should be automatically updated and used in any function.  </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AnalogInput" type="InputOutputVar" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the analog input variables.  These should be automatically updated and used in any function.  </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ConditionVar" type="ConditionVar" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the variables that depend on the current condition.  These should be automatically updated for each trial (after choosing a condition).  They can be set to constants if desired.  As with the other variables, they can be used in any function.  </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AnalogOutput" type="InputOutputVar" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the analog output variables.  Values for an analog output can be defined for each state.  These will 'play' when transitioning into that state.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="DigitalOutput" type="InputOutputVar" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines the digital output variables.  Values for a digital output can be defined for each state.  These will 'play' after transitioning into that state and can be set to 'strobe'.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="VideoDisplay" type="VideoDisplay" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Defines video displays that might be used.  Not currently implemented.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ChooseNextCondition" type="Function" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Function to call after trial to choose next condition.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ChooseStartState" type="Function" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Function to call to choose the start state for the trial. Optional: Default should be to call first defined state.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="Name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">The name of the state machine.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="Subject" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Name (or ID) of subject performing behavior.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="FirstCondition" type="xs:string" use="optional" default="1">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">First condition to run.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="NumConditions" type="xs:integer" default="1">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Total number of conditions possible (default is 1).</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="MaximumTrials" type="xs:integer" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Maximum number of trials to run (optional, default is unbounded).</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ITILength" type="xs:float" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">The length (in seconds) of the inter-trial interval.  </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="BSMVersion" type="xs:float" use="optional" default="1.0">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Version of the BSM expected (optional).  If specified this could limit execution or use different code paths.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  
+  <xs:complexType name="State">
+    <xs:annotation>
+      <xs:appinfo>State within BSM</xs:appinfo>
+      <xs:documentation xml:lang="en">Data type for a state within the behavioral state machine.  Defines transition and outputs.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Transition" type="Transition" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="AnalogOutput" type="AnalogOutputVar" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="DigitalOutput" type="DigitalOutputVar" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="ID" type="xs:integer" use="optional"/>
+    <xs:attribute name="Interruptable" type="xs:boolean" default="true"/>
+  </xs:complexType>
+  
+  <xs:complexType name="Transition">
+    <xs:annotation>
+      <xs:appinfo>Transition between BSM states.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines a transition from one state within the BSM to the next.  Usually defined within a state but can be defined outside.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Logic" type="Function" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="To" type="xs:string" use="required"/>
+    <xs:attribute name="From" type="xs:string" use="optional"/>
+    <xs:attribute name="ID" type="xs:integer" use="optional"/>
+  </xs:complexType>
+  
+  <xs:complexType name="Function">
+    <xs:annotation>
+      <xs:appinfo>Generic function call.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines a function.  Functions are interpreted at run-time by BSM program.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ParserName" type="xs:string" use="optional"/>
+        <xs:attribute name="ParserCall" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:complexType name="InputOutputVar">
+    <xs:annotation>
+      <xs:appinfo>Input/Output Variable Parameters.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines how variables are either set by external inputs or provides a definition for setting values for output.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Channel" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="SourceParameter" type="Parameter" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="SourceName" type="xs:string"/>
+    <xs:attribute name="SourceType" type="xs:string"/>
+    <xs:attribute name="SourceRate" type="xs:integer" default="1000"/>
+    <xs:attribute name="KeepSamples" type="xs:integer" default="1"/>
+    <xs:attribute name="SaveSamples" type="xs:boolean" default="true"/>
+    <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="DefaultValue" type="xs:string" use="optional"/>
+  </xs:complexType>
+  
+  <xs:complexType name="ConditionVar">
+    <xs:annotation>
+      <xs:appinfo>Variables set by current trial condition.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines the variables that are assigned by what condition is in effect.  Variables are defined by a function call.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="Function" type="xs:string" use="required"/>
+    <xs:attribute name="DefaultValue" type="xs:string" use="optional"/>
+  </xs:complexType>
+  
+  <xs:complexType name="AnalogOutputVar">
+    <xs:annotation>
+      <xs:appinfo>Variable for outputting via analog within a state.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines the variable to 'play' to a particular analog output variable upon state transition.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="VarName" type="xs:string" use="required"/>
+    <xs:attribute name="Function" type="xs:string" use="required"/>
+    <xs:attribute name="ForceStop" type="xs:boolean" use="optional" default="false"/>
+  </xs:complexType>
+  
+  <xs:complexType name="DigitalOutputVar">
+    <xs:annotation>
+      <xs:appinfo>Variable for outputting via digital within a state.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines the variable to assign to a particular digital output variable upon state transition.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="VarName" type="xs:string" use="required"/>
+    <xs:attribute name="Function" type="xs:string" use="required"/>
+    <xs:attribute name="doStrobe" type="xs:boolean" use="optional" default="false"/>
+  </xs:complexType>
+  
+  <xs:complexType name="VideoDisplay">
+    <xs:annotation>
+      <xs:appinfo>Type definition for video display.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines a video display for use.  Currently unsupported.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="Name" type="xs:string" use="required"/>
+    <xs:attribute name="HorizontalResolution" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="VerticalResolution" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="RefreshRate" type="xs:nonNegativeInteger" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="Parameter">
+    <xs:attribute name="Key" type="xs:string" use="required"/>
+    <xs:attribute name="Value" type="xs:string" use="required"/>
+  </xs:complexType>
+</xs:schema>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

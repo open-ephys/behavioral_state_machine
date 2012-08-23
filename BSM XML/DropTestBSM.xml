@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<machine Name="DropTest" Subject="test" NumConditions="1" MaximumTrials="100" ITILength="1000" xmlns="http://www.timbuschman.com/behavioralstatemachine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.timbuschman.com/behavioralstatemachine file:///C:/BehavioralControl/BSM%20XML/BSM.xsd" xsi:noNamespaceSchemaLocation="BSM.xsd">
+
+  <State Name="Idle" ID="1" Interruptable="true">
+    <Transition To="Stim">
+      <Logic>TimeInState &gt;= IdleTime</Logic>
+    </Transition>
+  </State>
+  <State Name="Stim" ID="2" Interruptable="false">
+    <Transition To="Reward">
+      <Logic>TimeInState &gt;= StimTime</Logic>
+    </Transition>
+    <AnalogOutput VarName="Stimulator" Function="SinStim"/>
+  </State>
+  <State Name="Reward" ID="3" Interruptable="false">
+    <Transition To="EndState">
+      <Logic>TimeInState &gt;= IdleTime</Logic>
+    </Transition>
+    <DigitalOutput VarName="DigitalOut" Function="[ones(Dropsize, 1); zeros(2, 1)]" doStrobe="false" doTrue="true"/>
+  </State>
+  <DigitalInput SourceType="nidaq" SourceName="Dev1" Name="Touch" DefaultValue="0" SaveSamples="true">
+    <Channel>1</Channel>
+    <Channel>0</Channel>
+  </DigitalInput>
+  <AnalogInput SourceType="ni" SourceName="Dev1" SourceRate="2000" KeepSamples="10" SaveSamples="true" Name="AnalogTouch">
+    <Channel>8</Channel>
+    <Channel>1</Channel>
+    <Channel>0</Channel>
+  </AnalogInput>
+  <ConditionVar Name="IdleTime" Function="500"/>
+  <ConditionVar Name="StimTime" Function="IdleTime+5*CurrentTrial"/>
+  <ConditionVar Name="SinStim" Function="sin([0:1000]'/1000*2*pi*10*CurrentCondition)"/>
+  <ConditionVar Name="Dropsize" Function="100"/>
+  <AnalogOutput SourceType="ni" SourceName="Dev1" SourceRate="1000" Name="Stimulator">
+    <Channel>1</Channel>
+  </AnalogOutput>
+  <DigitalOutput SourceName="Dev1" SourceType="nidaq" Name="DigitalOut" DefaultValue="0">
+    <Channel>16</Channel>
+  </DigitalOutput>
+  <ChooseNextCondition>mod(CurrentTrial-1, 2)+1</ChooseNextCondition>
+</machine>
+
+
+
+
+
+
