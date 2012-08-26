@@ -76,12 +76,22 @@ for cur_state = 1:machine.NumStates,
         % VarName
         str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).DigitalOutput(cur_output).Channel = char(fread(fid, str_len, 'char*1')');
         %Function
-        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).DigitalOutput(cur_output).Data = char(fread(fid, str_len, 'char*1')');        
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).DigitalOutput(cur_output).Data = char(fread(fid, str_len, 'char*1')');
         %doStrobe
         machine.States(cur_state).DigitalOutput(cur_output).doStrobe = fread(fid, 1, 'uint8');
         %doTrue
         machine.States(cur_state).DigitalOutput(cur_output).doTrue = fread(fid, 1, 'uint8');
     end %digital output loop
+    
+    % Read this state's functions to-be-executed
+    machine.States(cur_state).NumExecuteFunction = fread(fid, 1, 'double'); %# of transitions
+    for cur_func = 1:machine.States(cur_state).NumExecuteFunction,
+        % Logic
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).ExecuteFunction(cur_func).Function = char(fread(fid, str_len, 'char*1')');
+        %Parser
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).ExecuteFunction(cur_func).ParserName = char(fread(fid, str_len, 'char*1')');
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).ExecuteFunction(cur_func).ParserCall = char(fread(fid, str_len, 'char*1')');
+    end %transition loop
     
 end %state loop
 
@@ -91,7 +101,7 @@ end %state loop
 machine.NumAnalogOutputs = fread(fid, 1, 'uint32');
 for cur_output = 1:machine.NumAnalogOutputs,
     %Name
-    str_len = fread(fid, 1, 'uint32'); machine.AnalogOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');        
+    str_len = fread(fid, 1, 'uint32'); machine.AnalogOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');
     %Source name
     str_len = fread(fid, 1, 'uint32'); machine.AnalogOutputs(cur_output).SourceName = char(fread(fid, str_len, 'char*1')');
     %Source type
@@ -114,9 +124,9 @@ end %analog output loop
 machine.NumDigitalOutputs = fread(fid, 1, 'uint32');
 for cur_output = 1:machine.NumDigitalOutputs,
     %Name
-    str_len = fread(fid, 1, 'uint32'); machine.DigitalOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');        
+    str_len = fread(fid, 1, 'uint32'); machine.DigitalOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');
     %Source name
-    str_len = fread(fid, 1, 'uint32'); machine.DigitalOutputs(cur_output).SourceName = char(fread(fid, str_len, 'char*1')');        
+    str_len = fread(fid, 1, 'uint32'); machine.DigitalOutputs(cur_output).SourceName = char(fread(fid, str_len, 'char*1')');
     %Source type
     str_len = fread(fid, 1, 'uint32'); machine.DigitalOutputs(cur_output).SourceType = char(fread(fid, str_len, 'char*1')');
     %Source rate
@@ -139,9 +149,9 @@ for cur_input = 1:machine.NumAnalogInputs,
     %Name
     str_len = fread(fid, 1, 'uint32'); machine.AnalogInputs(cur_input).Name = char(fread(fid, str_len, 'char*1')');
     %Source name
-    str_len = fread(fid, 1, 'uint32'); machine.AnalogInputs(cur_input).SourceName = char(fread(fid, str_len, 'char*1')');        
+    str_len = fread(fid, 1, 'uint32'); machine.AnalogInputs(cur_input).SourceName = char(fread(fid, str_len, 'char*1')');
     %Source type
-    str_len = fread(fid, 1, 'uint32'); machine.AnalogInputs(cur_input).SourceType = char(fread(fid, str_len, 'char*1')');        
+    str_len = fread(fid, 1, 'uint32'); machine.AnalogInputs(cur_input).SourceType = char(fread(fid, str_len, 'char*1')');
     %Source rate
     machine.AnalogInputs(cur_input).SourceRate = fread(fid, 1, 'double');
     %Keep samples -- how many samples to keep
@@ -184,7 +194,7 @@ for cur_input = 1:machine.NumDigitalInputs,
     num_param = fread(fid, 1, 'uint32');
     for i = 1:num_param,
         str_len = fread(fid, 1, 'uint32'); machine.DigitalInputs(cur_input).SourceParameters{i} = char(fread(fid, str_len, 'char*1')');
-    end    
+    end
 end %digital inputs loop
 
 
@@ -229,7 +239,7 @@ for cur_var = 1:num_vars,
         %# dimensions
         num_dims = fread(fid, 1, 'uint8');
         %Size of each dimension
-        var_size = fread(fid, num_dims, 'uint8');        
+        var_size = fread(fid, num_dims, 'uint8');
         %Write all of the values (in serial order)
         for cur_ind = 1:prod(var_size),
             cell_type = fread(fid, 1, 'uint8');

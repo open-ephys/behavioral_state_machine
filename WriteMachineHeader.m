@@ -87,6 +87,16 @@ for cur_state = 1:machine.NumStates,
         fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doTrue, 'uint8');
     end %digital output loop
     
+    % Write this state's functions to-be-executed
+    fwrite(fid, machine.States(cur_state).NumExecuteFunction, 'double'); %# of transitions
+    for cur_func = 1:machine.States(cur_state).NumExecuteFunction,
+        %Function
+        fwrite(fid, length(machine.States(cur_state).ExecuteFunction(cur_func).Function), 'uint32'); fwrite(fid, machine.States(cur_state).ExecuteFunction(cur_func).Function, 'char*1');
+        %Parser
+        fwrite(fid, length(machine.States(cur_state).ExecuteFunction(cur_func).ParserName), 'uint32'); fwrite(fid, machine.States(cur_state).ExecuteFunction(cur_func).ParserName, 'char*1');
+        fwrite(fid, length(machine.States(cur_state).ExecuteFunction(cur_func).ParserCall), 'uint32'); fwrite(fid, machine.States(cur_state).ExecuteFunction(cur_func).ParserCall, 'char*1');
+    end %transition loop
+    
 end %state loop
 
 %% Write input/output information

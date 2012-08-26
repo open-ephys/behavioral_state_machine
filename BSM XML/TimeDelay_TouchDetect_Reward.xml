@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<machine Name="BehavioralTraining" Subject="test" NumConditions="1" MaximumTrials="100" ITILength="5000" xmlns="http://www.timbuschman.com/behavioralstatemachine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.timbuschman.com/behavioralstatemachine file:///C:/BehavioralControl/BSM%20XML/BSM.xsd" xsi:noNamespaceSchemaLocation="BSM.xsd">
+<machine Name="TimeDelayBehavioralTraining" Subject="test" NumConditions="1" MaximumTrials="100" ITILength="1000" xmlns="http://www.timbuschman.com/behavioralstatemachine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.timbuschman.com/behavioralstatemachine file:///C:/BehavioralControl/BSM%20XML/BSM.xsd" xsi:noNamespaceSchemaLocation="BSM.xsd">
 
-  <State Name="TouchWindow" ID="1" Interruptable="true">
+  <State Name="TimeDelay" ID="1" Interruptable="true">
+    <Transition To="TouchWindow">
+      <Logic>TimeInState &gt;= Time_Delay</Logic>
+    </Transition>
+    <Transition To="NoResponseEndState">
+      <Logic>sum(abs(AnalogTouch)) &gt;= TouchThreshold</Logic>
+    </Transition>
+  </State>
+
+  <State Name="TouchWindow" ID="2" Interruptable="true">
     <Transition To="NoResponseEndState">
       <Logic>TimeInState &gt;= IdleTime</Logic>
     </Transition>
     <Transition To="Reward">
       <Logic>sum(abs(AnalogTouch)) &gt;= TouchThreshold</Logic>
     </Transition>
-    <ExecuteFunction>TouchThreshold = 2;</ExecuteFunction>
   </State>
   
-  <State Name="Reward" ID="2" Interruptable="false">
+    <State Name="Reward" ID="3" Interruptable="false">
     <DigitalOutput VarName="RewardOut" Function="[ones(Dropsize, 1); zeros(5, 1)]" doStrobe="false" doTrue="true"/>
     <Transition To="CorrectEndState">
       <Logic>TimeInState &gt;= RewardTime</Logic>
@@ -22,21 +30,21 @@
 <AnalogInput SourceType="ni" SourceName="Dev1" SourceRate="2000" KeepSamples="10" SaveSamples="true" Name="AnalogTouch">
     <Channel>8</Channel>
   </AnalogInput>
-  
+
   <ConditionVar Name="IdleTime" Function="500"/>
   <ConditionVar Name="StimTime" Function="IdleTime+5*CurrentTrial"/>
   <ConditionVar Name="SinStim" Function="sin([0:1000]'/1000*2*pi*10*CurrentCondition)"/>
   <ConditionVar Name="RewardTime" Function="100"/>
   <ConditionVar Name="Dropsize" Function="100"/>
   <ConditionVar Name="TouchThreshold" Function=".1"/>
-  
+  <ConditionVar Name="Time_Delay" Function="500"/>
+
   <DigitalOutput SourceName="Dev1" SourceType="nidaq" Name="RewardOut" DefaultValue="0">
     <Channel>16</Channel>
   </DigitalOutput>
-  
-  
-  
-</machine>
 
+
+
+</machine>
 
 

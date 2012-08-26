@@ -38,7 +38,7 @@ for cur_machine = 1:allMachines.getLength,
     if ~isempty(thisMachine.getAttribute('BSMVersion')),
         BSM_machine.BSMVersion = str2double(char(thisMachine.getAttribute('BSMVersion')));
     else
-        BSM_machine.BSMVersion = 1.0;
+        BSM_machine.BSMVersion = 0.11;
     end
     if isnan(BSM_machine.BSMVersion), BSM_machine.BSMVersion = 1.0; end
     if ~isempty(thisMachine.getAttribute('ITILength')),
@@ -160,6 +160,25 @@ for cur_machine = 1:allMachines.getLength,
         else
             cur_state.DigitalOutput = [];
             cur_state.NumDigitalOutput = 0;
+        end
+        
+        %Load execute functions
+        stateExecuteFunctions = thisState.getElementsByTagName('ExecuteFunction');
+        if stateExecuteFunctions.getLength > 0,
+            for cur_exec_ind = 1:stateExecuteFunctions.getLength,
+                temp_func = ParseFunction(stateExecuteFunctions.item(cur_exec_ind-1));
+                
+                clear cur_func;
+                cur_func.ParserName = temp_func.ParserName;
+                cur_func.ParserCall = temp_func.ParserCall;
+                cur_func.Function = temp_func.Logic;
+                
+                cur_state.ExecuteFunction(cur_exec_ind) = cur_func;
+            end %analog output loop
+            cur_state.NumExecuteFunction = length(cur_state.ExecuteFunction);
+        else
+            cur_state.ExecuteFunction = [];
+            cur_state.NumExecuteFunction = 0;
         end
         
         %Add to state list

@@ -25,6 +25,8 @@ trial_struct.CurrentCondition = fread(fid, 1, 'double');
 trial_struct.LastCycleStartTime = fread(fid, 1, 'double');
 trial_struct.LastCycleLength = fread(fid, 1, 'double');
 trial_struct.AverageTrialCycleLength = fread(fid, 1, 'double');
+trial_struct.MaxTrialCycleLength = fread(fid, 1, 'double');
+trial_struct.MinTrialCycleLength = fread(fid, 1, 'double');
 trial_struct.TrialNumCycles = fread(fid, 1, 'uint32');
 
 %Current state information
@@ -70,60 +72,64 @@ var_names = cell(num_vars, 1);
 for cur_var = 1:num_vars,
     %Name
     str_len = fread(fid, 1, 'uint32'); var_names{cur_var} = char(fread(fid, str_len, 'char*1')');
-    %What is the type of variable?
-    var_type = fread(fid, 1, 'uint8');
-    if (var_type == 0),
-        %Is numeric, read array in
-        
-        %# dimensions
-        num_dims = fread(fid, 1, 'uint8');
-        %Size of each dimension
-        var_size = fread(fid, num_dims, 'uint32')';
-        if prod(var_size) == 0,
-            temp_var = [];
-        else
-            %Read all of the values (in serial order)
-            temp_var = fread(fid, prod(var_size), 'double');
-            temp_var = reshape(temp_var, var_size);
-        end
-    elseif (var_type == 2),
-        %Is a cell array, have to treat each element in turn
-        
-        %# dimensions
-        num_dims = fread(fid, 1, 'uint8');
-        %Size of each dimension
-        var_size = fread(fid, num_dims, 'uint8');        
-        %Write all of the values (in serial order)
-        for cur_ind = 1:prod(var_size),
-            cell_type = fread(fid, 1, 'uint8');
-            if cell_type == 20,
-                %# dimensions
-                cell_dims = fread(fid, 1, 'uint8');
-                %Size of each dimension
-                cell_var_size = fread(fid, cell_dims, 'uint32')';
-                if prod(var_size) == 0,
-                    cur_cell_val = [];
-                else
-                    %Read all of the values (in serial order)
-                    cur_cell_val = fread(fid, prod(cell_var_size), 'double');
-                    cur_cell_val = reshape(cur_cell_val, var_size);
-                end
-            elseif cell_type == 21,
-                str_len = fread(fid, 1, 'uint32');
-                cur_cell_val = char(fread(fid, str_len, 'char*1')');
+    
+    %Loop through states, saving each in turn
+    for cur_state_ind = 1:trial_struct.TrialStateCount,
+        %What is the type of variable?
+        var_type = fread(fid, 1, 'uint8');
+        if (var_type == 0),
+            %Is numeric, read array in
+            
+            %# dimensions
+            num_dims = fread(fid, 1, 'uint8');
+            %Size of each dimension
+            var_size = fread(fid, num_dims, 'uint32')';
+            if prod(var_size) == 0,
+                temp_var = [];
             else
-                error('Cell array contains a type of data not supported.');
+                %Read all of the values (in serial order)
+                temp_var = fread(fid, prod(var_size), 'double');
+                temp_var = reshape(temp_var, var_size);
             end
-            temp_var{cur_ind} = cur_cell_val;
+        elseif (var_type == 2),
+            %Is a cell array, have to treat each element in turn
+            
+            %# dimensions
+            num_dims = fread(fid, 1, 'uint8');
+            %Size of each dimension
+            var_size = fread(fid, num_dims, 'uint8');
+            %Write all of the values (in serial order)
+            for cur_ind = 1:prod(var_size),
+                cell_type = fread(fid, 1, 'uint8');
+                if cell_type == 20,
+                    %# dimensions
+                    cell_dims = fread(fid, 1, 'uint8');
+                    %Size of each dimension
+                    cell_var_size = fread(fid, cell_dims, 'uint32')';
+                    if prod(var_size) == 0,
+                        cur_cell_val = [];
+                    else
+                        %Read all of the values (in serial order)
+                        cur_cell_val = fread(fid, prod(cell_var_size), 'double');
+                        cur_cell_val = reshape(cur_cell_val, var_size);
+                    end
+                elseif cell_type == 21,
+                    str_len = fread(fid, 1, 'uint32');
+                    cur_cell_val = char(fread(fid, str_len, 'char*1')');
+                else
+                    error('Cell array contains a type of data not supported.');
+                end
+                temp_var{cur_ind} = cur_cell_val;
+            end
+        elseif (var_type == 2),
+            %Character string
+            str_len = fread(fid, 1, 'uint32');
+            temp_var = char(fread(fid, str_len, 'char*1')');
+        else
+            error('Unkown variable type.');
         end
-    elseif (var_type == 2),
-        %Character string
-        str_len = fread(fid, 1, 'uint32');
-        temp_var = char(fread(fid, str_len, 'char*1')');
-    else
-        error('Unkown variable type.');
-    end
-    trial_struct.Vars.(var_names{cur_var}) = temp_var;
+        trial_struct.StateVarValue(cur_state_ind).(var_names{cur_var}) = temp_var;
+    end %state loop
 end %variables loop
 
 %Saved variables loop

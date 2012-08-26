@@ -29,10 +29,10 @@ for i = 1:machine.NumDigitalInputObject,
     end %matching variable loop
 end %digital input object loop
 
-% Loop through condition variables
-for i = 1:machine.NumConditionVars,
-    machine.Vars.(machine.ConditionVars(i).Name) = eval(machine.ConditionVars(i).Function);
-end
+% % Loop through condition variables
+% for i = 1:machine.NumConditionVars,
+%     machine.Vars.(machine.ConditionVars(i).Name) = eval(machine.ConditionVars(i).Function);
+% end
 
 % Update the time in state variable
 machine.TimeInState = (now - machine.TimeEnterState)*86400000; % Time (ms) in current state, multiplying by 24*60*60*1000 to get to ms

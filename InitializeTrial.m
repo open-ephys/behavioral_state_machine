@@ -11,7 +11,10 @@ machine.TimeInState = 0;
 machine.CurrentStateID = 0;
 machine.TrialNumCycles = 0;
 machine.AverageTrialCycleLength = 0;
+machine.MaxTrialCycleLength = 0;
+machine.MinTrialCycleLength = Inf;
 machine.LastCycleTime = now;
+machine.TrialStateCount = 0;
 
 %Pick current condition
 if machine.CurrentTrial == 1,
@@ -36,4 +39,14 @@ if isempty(machine.ChooseStartState.Logic),
 else
     machine.TrialStartState(machine.CurrentTrial) = eval(machine.ChooseStartState.Logic);
 end
-machine.TrialStateList{machine.CurrentTrial} = [machine.TrialStartState(machine.CurrentTrial)];
+
+%Initialize trial variables
+machine.TrialStateList{machine.CurrentTrial} = [0];
+machine.TrialStateEnterTimeList{machine.CurrentTrial} = now;
+machine.TrialStateCount = 1;
+
+% Loop through condition variables, update them for this trial -- NOTE THESE WILL BE CONSTANT THROUGOUT THE TRIAL
+for i = 1:machine.NumConditionVars,
+    machine.Vars.(machine.ConditionVars(i).Name) = eval(machine.ConditionVars(i).Function);
+end
+machine.StateVarValue = struct(machine.Vars);

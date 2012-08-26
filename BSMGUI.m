@@ -253,7 +253,7 @@ if ~isempty(machine.StartTime) & ~isnan(machine.StartTime),
     running_time = now - machine.StartTime;
     set(handles.RunningTimeText, 'String', datestr(running_time, 'HH:MM:SS'));
     if ~isnan(machine.AverageTrialCycleLength) & ~isempty(machine.AverageTrialCycleLength),
-        set(handles.CycleRateText, 'String', sprintf('%4.0f Hz', 1./(machine.AverageTrialCycleLength*86400)));
+        set(handles.CycleRateText, 'String', sprintf('%4.0fHz [%4.0f:%4.0f]', 1./([machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength]*86400)));
     end
 end
 
@@ -464,14 +464,6 @@ function ViewBSMButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 DisplayMachine(handles.machine);
-
-% --- Executes on button press in MapConditionsButton.
-function MapConditionsButton_Callback(hObject, eventdata, handles)
-% hObject    handle to MapConditionsButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-DisplayBlocksConditions(handles.machine);
 
 % --- Executes on button press in SaveBSMButton.
 function SaveBSMButton_Callback(hObject, eventdata, handles)

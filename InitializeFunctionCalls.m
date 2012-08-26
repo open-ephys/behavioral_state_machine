@@ -82,6 +82,11 @@ for state_ind = 1:machine.NumStates,
         machine.States(state_ind).DigitalOutput(digital_out_ind).Data = ...
             ReplaceVariables(machine.States(state_ind).DigitalOutput(digital_out_ind).Data, var_list, machine_var_list);
     end %digital output loop
+    
+    for exec_ind = 1:machine.States(state_ind).NumExecuteFunction,
+        machine.States(state_ind).ExecuteFunction(exec_ind).Function = ...
+            ReplaceVariables(machine.States(state_ind).ExecuteFunction(exec_ind).Function, var_list, machine_var_list);
+    end %execute function list
 end %state loop
 
 end %initialize function calls function
