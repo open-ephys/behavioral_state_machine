@@ -8,6 +8,7 @@ BSMs are defined via XML file.  Examples and schema are provided in the 'BSM XML
 
 To add:
 * Need to improve documentation.
+* Add support for callbacks to request more data for very long analog output streams.
 * Support for multiple BSMs running simultaneously.
 * Graphical interface for creating/editing BSMs.
 * Build in calibrations of analog outputs with physical devices (i.e. water/laser delivery).

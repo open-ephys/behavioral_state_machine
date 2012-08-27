@@ -51,14 +51,26 @@ for cur_state = 1:machine.NumStates,
     for cur_trans = 1:machine.States(cur_state).NumTransitions,
         connect_to = eval(machine.States(cur_state).Transitions(cur_trans).ToState);
         
-        if connect_to < 0, 
+        if connect_to < 0,
             %End trial
             start_pos = state_h.StateCenters(:, cur_state) + state_h.CircleRadius*[0 1]';
             end_pos = state_h.StateCenters(:, cur_state) + (cur_trans*0.5 + 1)*state_h.CircleRadius*[0 1]';
             
+            switch connect_to,
+                case CorrectEndState
+                    arrowhead_color = [0 0.7 0];
+                case IncorrectEndState
+                    arrowhead_color = [0.7 0 0];
+                case NoResponseEndState
+                    arrowhead_color = [0.4 0.4 0.4];
+                case EarlyResponseEndState
+                    arrowhead_color = [0.3 0.3 0.8];
+                otherwise
+                    arrowhead_color = [0 0 0];
+            end
             [state_h.StateObj(cur_state).Transitions{cur_trans}, arrow_points] = ...
                 draw_arrow(start_pos, end_pos, 'MidlineOffset', 0, 'ArrowDirection', [0 1], 'ArrowShape', 1, ...
-                'ArrowHeadSize', [0.1*state_h.CircleRadius 0.1*state_h.CircleRadius], 'ArrowHeadSizeUnits', 0);            
+                'ArrowHeadSize', [0.1*state_h.CircleRadius 0.1*state_h.CircleRadius], 'ArrowHeadSizeUnits', 0, 'ArrowHeadColor', arrowhead_color);
         elseif connect_to == cur_state,
             %Connect back onto oneself
             start_pos = state_h.StateCenters(:, cur_state) + state_h.CircleRadius*[0.05 -1]';

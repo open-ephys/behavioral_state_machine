@@ -62,8 +62,13 @@ for cur_var = 1:machine.NumConditionVars,
 end %condition variables loop
 
 %Variables loop (saved after each state transition)
-var_names = fieldnames(machine.Vars);
-num_vars = length(var_names);
+if ~isempty(machine.Vars),
+    var_names = fieldnames(machine.Vars);
+    num_vars = length(var_names);
+else
+    var_names = {};
+    num_vars = 0;
+end
 fwrite(fid, num_vars, 'uint32');
 for cur_var = 1:num_vars,
     %Name
@@ -122,8 +127,13 @@ for cur_var = 1:num_vars,
 end %variables loop
 
 %Saved variables loop
-var_names = fieldnames(machine.SaveVarValue);
-num_vars = length(var_names);
+if ~isempty(machine.SaveVarValue),
+    var_names = fieldnames(machine.SaveVarValue);
+    num_vars = length(var_names);
+else
+    var_names = {};
+    num_vars = 0;
+end
 fwrite(fid, num_vars, 'uint32');
 for cur_var = 1:num_vars,
     %Name
