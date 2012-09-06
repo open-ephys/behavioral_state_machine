@@ -34,7 +34,7 @@ trial_struct.CurrentStateID = fread(fid, 1, 'uint32');
 str_len = fread(fid, 1, 'uint32'); trial_struct.CurrentStateName = char(fread(fid, str_len, 'char*1')');
 trial_struct.TimeInState = fread(fid, 1, 'double');
 trial_struct.TimeEnterState = fread(fid, 1, 'double');
-           
+
 %% Read trial state list and times
 
 % Starting state of the trial
@@ -72,7 +72,6 @@ var_names = cell(num_vars, 1);
 for cur_var = 1:num_vars,
     %Name
     str_len = fread(fid, 1, 'uint32'); var_names{cur_var} = char(fread(fid, str_len, 'char*1')');
-    
     %Loop through states, saving each in turn
     for cur_state_ind = 1:trial_struct.TrialStateCount,
         %What is the type of variable?
@@ -116,6 +115,18 @@ for cur_var = 1:num_vars,
                 elseif cell_type == 21,
                     str_len = fread(fid, 1, 'uint32');
                     cur_cell_val = char(fread(fid, str_len, 'char*1')');
+                elseif cell_type == 23,
+                    %# dimensions
+                    cell_dims = fread(fid, 1, 'uint8');
+                    %Size of each dimension
+                    cell_var_size = fread(fid, cell_dims, 'uint32')';
+                    if prod(var_size) == 0,
+                        cur_cell_val = [];
+                    else
+                        %Read all of the values (in serial order)
+                        cur_cell_val = logical(fread(fid, prod(cell_var_size), 'uint1'));
+                        cur_cell_val = reshape(cur_cell_val, var_size);
+                    end
                 else
                     error('Cell array contains a type of data not supported.');
                 end
@@ -125,8 +136,24 @@ for cur_var = 1:num_vars,
             %Character string
             str_len = fread(fid, 1, 'uint32');
             temp_var = char(fread(fid, str_len, 'char*1')');
+        elseif (var_type == 3),
+            %Is logical, read array in
+            
+            %# dimensions
+            num_dims = fread(fid, 1, 'uint8');
+            %Size of each dimension
+            var_size = fread(fid, num_dims, 'uint32')';
+            if prod(var_size) == 0,
+                temp_var = [];
+            else
+                %Read all of the values (in serial order)
+                temp_var = logical(fread(fid, prod(var_size), 'ubit1'));
+                temp_var = reshape(temp_var, var_size);
+            end            
+        elseif (var_type == 255),
+            warning('Couldn''t read in value for variable %s because it wasn''t a known type at the time of writing the file.', var_names{cur_var});
         else
-            error('Unkown variable type.');
+            error('Reading in file failed.  Ran into an unknown variable type that wasn''t written properly.');
         end
         trial_struct.StateVarValue(cur_state_ind).(var_names{cur_var}) = temp_var;
     end %state loop
@@ -137,7 +164,7 @@ num_vars = fread(fid, 1, 'uint32');
 for cur_var = 1:num_vars,
     %Name
     str_len = fread(fid, 1, 'uint32'); var_name = char(fread(fid, str_len, 'char*1')');
-        
+    
     %# dimensions
     num_dims = fread(fid, 1, 'uint8');
     %Size of each dimension
@@ -152,7 +179,7 @@ for cur_var = 1:num_vars,
         temp_var = reshape(temp_var, var_size);
         %Read all of the timestamps (in serial order)
         temp_ts = fread(fid, num_samples, 'double');
-    end    
+    end
     
     trial_struct.SaveVarValue.(var_name) = temp_var;
     trial_struct.SaveVarTimestamp.(var_name) = temp_ts;

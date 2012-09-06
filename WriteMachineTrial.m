@@ -113,6 +113,15 @@ for cur_var = 1:num_vars,
                     fwrite(fid, 21, 'uint8'); %String data type in cell
                     fwrite(fid, length(cur_cell_val), 'uint32');
                     fwrite(fid, cur_cell_val, 'char*1');
+                elseif islogical(cur_cell_var),
+                    fwrite(fid, 23, 'uint8'); %Logical data type in cell
+                    %# dimensions
+                    fwrite(fid, ndims(cur_cell_val), 'uint8');
+                    %Size of each dimension
+                    var_size = size(cur_cell_val);
+                    for i = 1:ndims(cur_cell_val), fwrite(fid, var_size(i), 'uint32'); end
+                    %Write all of the values (in serial order)
+                    fwrite(fid, cur_cell_val(:), 'ubit1');
                 else
                     error('Cell arrays must either be of character strings or matrices.  Nested cell arrays not supported.');
                 end
@@ -122,6 +131,19 @@ for cur_var = 1:num_vars,
             fwrite(fid, 1, 'uint8');
             fwrite(fid, length(machine.StateVarValue(cur_state_ind).(var_names{cur_var})), 'uint32');
             fwrite(fid, machine.StateVarValue(cur_state_ind).(var_names{cur_var}), 'char*1');
+        elseif islogical(machine.StateVarValue(cur_state_ind).(var_names{cur_var})),
+            %Is logical, write array out
+            fwrite(fid, 3, 'uint8');
+            
+            %# dimensions
+            fwrite(fid, ndims(machine.StateVarValue(cur_state_ind).(var_names{cur_var})), 'uint8');
+            %Size of each dimension
+            var_size = size(machine.StateVarValue(cur_state_ind).(var_names{cur_var}));
+            for i = 1:ndims(machine.StateVarValue(cur_state_ind).(var_names{cur_var})), fwrite(fid, var_size(i), 'uint32'); end
+            %Write all of the values (in serial order)
+            fwrite(fid, machine.StateVarValue(cur_state_ind).(var_names{cur_var})(:), 'ubit1');
+        else
+            fwrite(fid, 255, 'uint8'); %this means an unknown data type
         end
     end %state loop
 end %variables loop

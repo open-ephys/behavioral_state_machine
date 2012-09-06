@@ -1,7 +1,7 @@
 function err = WriteMachineHeader(fid, machine)
 
-% Writes header information about the machine to the current file.  This 
-% should be followed by individual trial information and then the file 
+% Writes header information about the machine to the current file.  This
+% should be followed by individual trial information and then the file
 % should be ended by writing footer.
 %
 % Create 6/22/12 by TJB
@@ -262,6 +262,15 @@ for cur_var = 1:length(var_names),
                 fwrite(fid, 21, 'uint8'); %String data type in cell
                 fwrite(fid, length(cur_cell_val), 'uint32');
                 fwrite(fid, cur_cell_val, 'char*1');
+            elseif islogical(cur_cell_var),
+                fwrite(fid, 23, 'uint8'); %Logical data type in cell
+                %# dimensions
+                fwrite(fid, ndims(cur_cell_val), 'uint8');
+                %Size of each dimension
+                var_size = size(cur_cell_val);
+                for i = 1:ndims(cur_cell_val), fwrite(fid, var_size(i), 'uint32'); end
+                %Write all of the values (in serial order)
+                fwrite(fid, cur_cell_val(:), 'ubit1');
             else
                 error('Cell arrays must either be of character strings or matrices.  Nested cell arrays not supported.');
             end
@@ -272,5 +281,18 @@ for cur_var = 1:length(var_names),
         
         fwrite(fid, length(machine.Vars.(var_names{cur_var})), 'uint32');
         fwrite(fid, machine.Vars.(var_names{cur_var}), 'char*1');
+    elseif islogical(machine.Vars.(var_names{cur_var})),
+        %Is logical, write array out
+        fwrite(fid, 3, 'uint8');
+        
+        %# dimensions
+        fwrite(fid, ndims(machine.Vars.(var_names{cur_var})), 'uint8');
+        %Size of each dimension
+        var_size = size(machine.Vars.(var_names{cur_var}));
+        for i = 1:ndims(machine.Vars.(var_names{cur_var})), fwrite(fid, var_size(i), 'uint32'); end
+        %Write all of the values (in serial order)
+        fwrite(fid, machine.Vars.(var_names{cur_var})(:), 'ubit1');
+    else
+        fwrite(fid, 255, 'uint8'); %this means an unknown data type
     end
 end %variables loop
