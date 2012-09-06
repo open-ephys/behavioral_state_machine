@@ -121,7 +121,7 @@ for cur_var = 1:num_vars,
                 end
                 temp_var{cur_ind} = cur_cell_val;
             end
-        elseif (var_type == 2),
+        elseif (var_type == 1),
             %Character string
             str_len = fread(fid, 1, 'uint32');
             temp_var = char(fread(fid, str_len, 'char*1')');
