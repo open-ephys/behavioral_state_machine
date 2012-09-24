@@ -20,6 +20,8 @@ trial_struct.CurrentTrial = fread(fid, 1, 'double');
 trial_struct.MaximumTrials = fread(fid, 1, 'double');
 %Current condition
 trial_struct.CurrentCondition = fread(fid, 1, 'double');
+%Current condition set
+trial_struct.CurrentConditionSet = fread(fid, 1, 'double');
 
 %Timing of the trial
 trial_struct.LastCycleStartTime = fread(fid, 1, 'double');
@@ -34,6 +36,10 @@ trial_struct.CurrentStateID = fread(fid, 1, 'uint32');
 str_len = fread(fid, 1, 'uint32'); trial_struct.CurrentStateName = char(fread(fid, str_len, 'char*1')');
 trial_struct.TimeInState = fread(fid, 1, 'double');
 trial_struct.TimeEnterState = fread(fid, 1, 'double');
+
+%Any hotkeys executed before this trial
+num = fread(fid, 1, 'double');
+trial_struct.doHotkey = logical(fread(fid, num, 'uint8'));
 
 %% Read trial state list and times
 
@@ -63,7 +69,14 @@ for cur_var = 1:trial_struct.NumConditionVars,
     %Function
     str_len = fread(fid, 1, 'uint32'); trial_struct.ConditionVars(cur_var).Function = char(fread(fid, str_len, 'char*1')');
     %Default value
-    trial_struct.ConditionVars(cur_var).DefaultValue = fread(fid, 1, 'double');
+    len = fread(fid, 1, 'uint32');
+    if len > 0,
+        trial_struct.ConditionVars(cur_var).DefaultValue = fread(fid, len, 'double');
+    else
+        trial_struct.ConditionVars(cur_var).DefaultValue = [];
+    end    
+    %Editable?
+    trial_struct.ConditionVars(cur_var).Editable = logical(fread(fid, 1, 'uint8'));
 end %condition variables loop
 
 %Variables loop

@@ -27,7 +27,9 @@ machine_var_list{end+1} = 'TimeEnterState'; % Time (ms) in current state
 %Condition variables
 machine_var_list{end+1} = 'CurrentCondition'; %Current condition
 machine_var_list{end+1} = 'NumConditions'; %Number of conditions
-machine_var_list{end+1} = 'FirstCondition'; %Number of conditions
+machine_var_list{end+1} = 'FirstCondition'; %First condition to be executed
+machine_var_list{end+1} = 'NumConditionSets'; %Number of condition sets
+machine_var_list{end+1} = 'CurrentConditionSet'; %Current condition set
 
 %Trial variables
 machine_var_list{end+1} = 'TrialCondition'; %List of conditions used over all of the trials

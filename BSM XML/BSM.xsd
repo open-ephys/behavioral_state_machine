@@ -59,6 +59,11 @@
           <xs:documentation xml:lang="en">Function to call to choose the start state for the trial. Optional: Default should be to call first defined state.</xs:documentation>
         </xs:annotation>
       </xs:element>
+	  <xs:element name="Hotkey" type="Hotkey" minOccurs="0" maxOccurs="6">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Function to execute to when a user hits a hotkey (optional).</xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
     <xs:attribute name="Name" type="xs:string" use="required">
       <xs:annotation>
@@ -78,6 +83,11 @@
     <xs:attribute name="NumConditions" type="xs:integer" default="1">
       <xs:annotation>
         <xs:documentation xml:lang="en">Total number of conditions possible (default is 1).</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+	<xs:attribute name="NumConditionSets" type="xs:integer" default="1">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">Total number of condition 'sets' possible (default is 1).  Note that this doesn't change the condition at all, but only the over-arching 'set' which the user can use.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="MaximumTrials" type="xs:integer" use="optional">
@@ -139,6 +149,20 @@
     </xs:simpleContent>
   </xs:complexType>
   
+  <xs:complexType name="Hotkey">
+    <xs:annotation>
+      <xs:appinfo>Function call when user hits a hotkey.</xs:appinfo>
+      <xs:documentation xml:lang="en">Defines a hotkey.  Hotkey functions are interpreted at run-time by BSM program when user hits a button on the GUI.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ParserName" type="xs:string" use="optional"/>
+        <xs:attribute name="ParserCall" type="xs:string" use="optional"/>
+		<xs:attribute name="HotkeyName" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
   <xs:complexType name="InputOutputVar">
     <xs:annotation>
       <xs:appinfo>Input/Output Variable Parameters.</xs:appinfo>
@@ -165,6 +189,7 @@
     <xs:attribute name="Name" type="xs:string" use="required"/>
     <xs:attribute name="Function" type="xs:string" use="required"/>
     <xs:attribute name="DefaultValue" type="xs:string" use="optional"/>
+	<xs:attribute name="Editable" type="xs:boolean" default="true" use="optional"/>
   </xs:complexType>
   
   <xs:complexType name="AnalogOutputVar">

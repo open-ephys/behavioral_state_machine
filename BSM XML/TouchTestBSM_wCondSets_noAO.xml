@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<machine Name="DropTest" Subject="test" NumConditions="1" NumConditionSets="2" MaximumTrials="100" ITILength="1000" xmlns="http://www.timbuschman.com/behavioralstatemachine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.timbuschman.com/behavioralstatemachine file:///C:/BehavioralControl/BSM%20XML/BSM.xsd" xsi:noNamespaceSchemaLocation="BSM.xsd">
+
+  <State Name="Idle" ID="1" Interruptable="true">
+    <Transition To="Reward">
+      <Logic>sum(abs(AnalogTouch)) &gt;= TouchThresh</Logic>
+    </Transition>
+    <Transition To="NoResponseEndState">
+      <Logic>TimeInState &gt;= 3000</Logic>
+    </Transition>
+  </State>
+  <State Name="Reward" ID="2" Interruptable="false">
+    <Transition To="CorrectEndState">
+      <Logic>TimeInState &gt;= IdleTime</Logic>
+    </Transition>
+  </State>
+
+  <ConditionVar Name="IdleTime" Function="500"/>
+  <ConditionVar Name="Dropsize" Function="100"/>
+  <ConditionVar Name="TouchThresh" Editable="false" Function=".1"/>
+  
+  <ChooseNextCondition>1</ChooseNextCondition>
+</machine>
+
+
+
+
+

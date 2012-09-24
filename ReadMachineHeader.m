@@ -21,7 +21,7 @@ machine.ITILength = fread(fid, 1, 'double');
 machine.MaximumTrials = fread(fid, 1, 'double');
 str_len = fread(fid, 1, 'uint32'); machine.SaveFilename = char(fread(fid, str_len, 'char*1')');
 
-%% Write condition information
+%% Read condition information
 %               NumConditions: 2
 %              FirstCondition: NaN
 %         ChooseNextCondition: [1x1 struct]
@@ -31,6 +31,25 @@ str_len = fread(fid, 1, 'uint32'); machine.FirstCondition = char(fread(fid, str_
 str_len = fread(fid, 1, 'uint32'); machine.ChooseNextCondition.ParserName = char(fread(fid, str_len, 'char*1')');
 str_len = fread(fid, 1, 'uint32'); machine.ChooseNextCondition.ParserCall = char(fread(fid, str_len, 'char*1')');
 str_len = fread(fid, 1, 'uint32'); machine.ChooseNextCondition.Logic = char(fread(fid, str_len, 'char*1')');
+
+%% Read condition set information
+%            NumConditionSets: 1
+%         CurrentConditionSet: 1
+machine.NumConditionSets = fread(fid, 1, 'double');
+machine.CurrentConditionSet = fread(fid, 1, 'double');
+
+%% Read Hotkey information
+%                  NumHotkeys: 1
+%                      Hotkey: function
+%                    doHotkey: [0]
+machine.NumHotkeys = fread(fid, 1, 'double');
+for i = 1:machine.NumHotkeys,
+    str_len = fread(fid, 1, 'uint32'); machine.Hotkey(i).Name = char(fread(fid, str_len, 'char*1')');
+    str_len = fread(fid, 1, 'uint32'); machine.Hotkey(i).ParserName = char(fread(fid, str_len, 'char*1')');
+    str_len = fread(fid, 1, 'uint32'); machine.Hotkey(i).ParserCall = char(fread(fid, str_len, 'char*1')');
+    str_len = fread(fid, 1, 'uint32'); machine.Hotkey(i).Logic = char(fread(fid, str_len, 'char*1')');
+end %hotkey loop
+machine.doHotkey = fread(fid, machine.NumHotkeys, 'uint8');
 
 %% Read state information
 
@@ -208,7 +227,14 @@ for cur_var = 1:machine.NumConditionVars,
     %Function
     str_len = fread(fid, 1, 'uint32'); machine.ConditionVars(cur_var).Function = char(fread(fid, str_len, 'char*1')');
     %Default value
-    machine.ConditionVars(cur_var).DefaultValue = fread(fid, 1, 'double');
+    len = fread(fid, 1, 'uint32');
+    if len > 0,
+        machine.ConditionVars(cur_var).DefaultValue = fread(fid, len, 'double');
+    else
+        machine.ConditionVars(cur_var).DefaultValue = [];
+    end
+    %Editable
+    machine.ConditionVars(cur_var).Editable = logical(fread(fid, 1, 'uint8'));
 end %condition variables loop
 
 %Variables loop

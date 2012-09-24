@@ -37,6 +37,25 @@ fwrite(fid, length(machine.ChooseNextCondition.ParserName), 'uint32'); fwrite(fi
 fwrite(fid, length(machine.ChooseNextCondition.ParserCall), 'uint32'); fwrite(fid, machine.ChooseNextCondition.ParserCall, 'char*1');
 fwrite(fid, length(machine.ChooseNextCondition.Logic), 'uint32'); fwrite(fid, machine.ChooseNextCondition.Logic, 'char*1');
 
+%% Write condition set information
+%            NumConditionSets: 1
+%         CurrentConditionSet: 1
+fwrite(fid, machine.NumConditionSets, 'double');
+fwrite(fid, machine.CurrentConditionSet, 'double');
+
+%% Write Hotkey information
+%                  NumHotkeys: 1
+%                      Hotkey: function
+%                    doHotkey: [0]
+fwrite(fid, machine.NumHotkeys, 'double');
+for i = 1:machine.NumHotkeys,
+    fwrite(fid, length(machine.Hotkey(i).Name), 'uint32'); fwrite(fid, machine.Hotkey(i).Name, 'char*1');
+    fwrite(fid, length(machine.Hotkey(i).ParserName), 'uint32'); fwrite(fid, machine.Hotkey(i).ParserName, 'char*1');
+    fwrite(fid, length(machine.Hotkey(i).ParserCall), 'uint32'); fwrite(fid, machine.Hotkey(i).ParserCall, 'char*1');
+    fwrite(fid, length(machine.Hotkey(i).Logic), 'uint32'); fwrite(fid, machine.Hotkey(i).Logic, 'char*1');
+end
+fwrite(fid, machine.doHotkey, 'uint8');
+
 %% Write state information
 
 fwrite(fid, machine.NumStates, 'double');
@@ -215,8 +234,13 @@ for cur_var = 1:machine.NumConditionVars,
     fwrite(fid, length(machine.ConditionVars(cur_var).Name), 'uint32'); fwrite(fid, machine.ConditionVars(cur_var).Name, 'char*1');
     %Function
     fwrite(fid, length(machine.ConditionVars(cur_var).Function), 'uint32'); fwrite(fid, machine.ConditionVars(cur_var).Function, 'char*1');
-    %Default value
-    fwrite(fid, machine.ConditionVars(cur_var).DefaultValue, 'double');
+    %Default value    
+    fwrite(fid, length(machine.ConditionVars(cur_var).DefaultValue), 'uint32');
+    if ~isempty(machine.ConditionVars(cur_var).DefaultValue),
+        fwrite(fid, machine.ConditionVars(cur_var).DefaultValue, 'double');
+    end
+    %Editable
+    fwrite(fid, machine.ConditionVars(cur_var).Editable, 'uint8');
 end %condition variables loop
 
 %Variables loop

@@ -38,7 +38,7 @@ for cur_machine = 1:allMachines.getLength,
     if ~isempty(thisMachine.getAttribute('BSMVersion')),
         BSM_machine.BSMVersion = str2double(char(thisMachine.getAttribute('BSMVersion')));
     else
-        BSM_machine.BSMVersion = 0.11;
+        BSM_machine.BSMVersion = 0.2;
     end
     if isnan(BSM_machine.BSMVersion), BSM_machine.BSMVersion = 1.0; end
     if ~isempty(thisMachine.getAttribute('ITILength')),
@@ -70,20 +70,39 @@ for cur_machine = 1:allMachines.getLength,
     
     
     % Load conditions and related functions
-    if ~isempty(thisMachine.getAttribute('NumConditions')),
+    if ~isempty(char(thisMachine.getAttribute('NumConditions'))),
         BSM_machine.NumConditions = str2double(char(thisMachine.getAttribute('NumConditions')));
     else
         BSM_machine.NumConditions = NaN;
     end
-    if ~isempty(thisMachine.getAttribute('FirstCondition')),
+    if ~isempty(char(thisMachine.getAttribute('FirstCondition'))),
         BSM_machine.FirstCondition = char(thisMachine.getAttribute('FirstCondition'));
     else BSM_machine.FirstCondition = '1'; end
     if isempty(BSM_machine.FirstCondition), BSM_machine.FirstCondition = '1'; end
     BSM_machine.CurrentCondition = 0;
+    if ~isempty(char(thisMachine.getAttribute('NumConditionSets'))),
+        BSM_machine.NumConditionSets = str2double(char(thisMachine.getAttribute('NumConditionSets')));
+    else
+        BSM_machine.NumConditionSets = 1;
+    end
+    if BSM_machine.NumConditionSets > 5, warning('GUI currently only supports up to five condition sets.'); end
+    BSM_machine.CurrentConditionSet = 0;
     
     BSM_machine.ChooseNextCondition = ParseFunction(thisMachine.getElementsByTagName('ChooseNextCondition').item(0));
     BSM_machine.ChooseStartState = ParseFunction(thisMachine.getElementsByTagName('ChooseStartState').item(0));
     
+    %Load any hotkeys
+    hotkeys = thisMachine.getElementsByTagName('Hotkey');
+    BSM_machine.NumHotkeys = hotkeys.getLength;
+    BSM_machine.doHotkey = false(BSM_machine.NumHotkeys, 1);
+    if BSM_machine.NumHotkeys > 5, warning('GUI currently only supports up to five hot keys.'); end
+    for i = 1:BSM_machine.NumHotkeys,
+        temp_func = ParseFunction(thisMachine.getElementsByTagName('Hotkey').item(i-1));
+        BSM_machine.Hotkey(i).Logic = temp_func.Logic;
+        BSM_machine.Hotkey(i).ParserName = temp_func.ParserName; BSM_machine.Hotkey(i).ParserCall = temp_func.ParserCall;
+        BSM_machine.Hotkey(i).Name = char(thisMachine.getElementsByTagName('Hotkey').item(i-1).getAttribute('Name'));
+        if isempty(BSM_machine.Hotkey(i).Name), BSM_machine.Hotkey(i).Name = sprintf('%d', i); end
+    end
     
     %Loop through states
     BSM_machine.States = [];
@@ -419,11 +438,13 @@ for cur_machine = 1:allMachines.getLength,
         for cur_var_ind = 1:machineConditionVars.getLength,
             thisVar = machineConditionVars.item(cur_var_ind-1);
             
-            %Set output parameters
+            %Set variable parameters
             clear cur_var;
             cur_var.Name = char(thisVar.getAttribute('Name'));
             cur_var.Function = char(thisVar.getAttribute('Function'));
             cur_var.DefaultValue = str2double(char(thisVar.getAttribute('DefaultValue')));
+            if isnan(cur_var.DefaultValue), cur_var.DefaultValue = []; end
+            cur_var.Editable = ~strcmpi(char(thisVar.getAttribute('Editable')), 'false');
             
             BSM_machine.ConditionVars(cur_var_ind) = cur_var;
         end %analog output loop

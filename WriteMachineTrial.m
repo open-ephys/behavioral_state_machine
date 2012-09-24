@@ -15,6 +15,8 @@ fwrite(fid, machine.CurrentTrial, 'double');
 fwrite(fid, machine.MaximumTrials, 'double');
 %Current condition
 fwrite(fid, machine.CurrentCondition, 'double');
+%Current condition set
+fwrite(fid, machine.CurrentConditionSet, 'double');
 
 %Timing of the trial
 fwrite(fid, machine.LastCycleStartTime, 'double');
@@ -29,6 +31,10 @@ fwrite(fid, machine.CurrentStateID, 'uint32');
 fwrite(fid, length(machine.CurrentStateName), 'uint32'); fwrite(fid, machine.CurrentStateName, 'char*1');
 fwrite(fid, machine.TimeInState, 'double');
 fwrite(fid, machine.TimeEnterState, 'double');
+
+%Any hotkeys executed before this trial
+fwrite(fid, machine.NumHotkeys, 'double');
+fwrite(fid, machine.doHotkey, 'uint8');
 
 %% Write trial state list and times
 
@@ -58,7 +64,12 @@ for cur_var = 1:machine.NumConditionVars,
     %Function
     fwrite(fid, length(machine.ConditionVars(cur_var).Function), 'uint32'); fwrite(fid, machine.ConditionVars(cur_var).Function, 'char*1');
     %Default value
-    fwrite(fid, machine.ConditionVars(cur_var).DefaultValue, 'double');
+    fwrite(fid, length(machine.ConditionVars(cur_var).DefaultValue), 'uint32');
+    if ~isempty(machine.ConditionVars(cur_var).DefaultValue),
+        fwrite(fid, machine.ConditionVars(cur_var).DefaultValue, 'double');
+    end
+    %Editable?
+    fwrite(fid, machine.ConditionVars(cur_var).Editable, 'uint8');
 end %condition variables loop
 
 %Variables loop (saved after each state transition)

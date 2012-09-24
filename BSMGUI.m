@@ -22,7 +22,7 @@ function varargout = BSMGUI(varargin)
 
 % Edit the above text to modify the response to help BSMGUI
 
-% Last Modified by GUIDE v2.5 11-Jul-2012 12:06:31
+% Last Modified by GUIDE v2.5 24-Sep-2012 08:17:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,11 +60,12 @@ handles.machine = [];
 handles.doRunMachine = 0;
 handles.doPauseMachine = 0;
 handles.doStopMachine = 0;
+handles.NextConditionSet = -1;
 
 %Change panel background to 'stop' color
 set([handles.ExecutePanel handles.text8 handles.text22 handles.text6 handles.text7 handles.text9 handles.text11 ...
-    handles.text15 handles.text17 handles.text24 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
-    handles.RunningTimeText handles.CycleRateText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
+    handles.text15 handles.text17 handles.text24 handles.text30 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
+    handles.RunningTimeText handles.CycleRateText handles.EndTimeText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
     'BackgroundColor', get(handles.StopMachine, 'BackgroundColor'));
 
 %Define end states
@@ -74,11 +75,15 @@ handles.EndStateConstants.IncorrectEndState = -3;
 handles.EndStateConstants.CorrectEndState = -2;
 handles.EndStateConstants.EndState = -1;
 
+% Define handle sets for later use in GUI manipulation
+handles.TopElements = [handles.text1 handles.BSMFilenameEdit handles.BrowseBSMButton handles.LoadBSMButton handles.ViewBSMButton handles.SaveBSMButton handles.ClearBSMButton];
+handles.ExecutePanelElements = findobj(handles.ExecutePanel, '-depth', 1);
+
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes BSMGUI wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.BSMFigure);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -155,7 +160,97 @@ SetAllFields(hObject, handles);
 set([handles.ViewBSMButton handles.ClearBSMButton handles.SaveBSMButton], 'Enable', 'on');
 set(handles.ExecutePanel, 'Visible', 'on');
 
+%Check to see if we should display the condition set panel
+if handles.machine.NumConditionSets > 1,
+    %Turn on panel
+    set(handles.CondSetPanel, 'Visible', 'on');
+    %Sort (from left to right) and then initialize buttons
+    CondSetButtons = findobj('Tag', 'CondSetToggleButton');
+    CondSetButtonsPosition = cell2mat(get(CondSetButtons, 'Position'));
+    [~, sort_ind] = sort(CondSetButtonsPosition(:, 1));
+    CondSetButtons = CondSetButtons(sort_ind);
+    %Enable/disable used condition sets
+    set(CondSetButtons(1:min(5, handles.machine.NumConditionSets)), 'Visible', 'on', 'Enable', 'on');
+    set(CondSetButtons((min(5, handles.machine.NumConditionSets)+1):5), 'Visible', 'on', 'Enable', 'off');
+    %Set toggle state for first button
+    set(CondSetButtons(1), 'Value', 1); set(CondSetButtons(2:end), 'Value', 0);
+else
+    set(handles.CondSetPanel, 'Visible', 'off');
+end
+
+%Check to see if we should display the condition set panel
+if handles.machine.NumHotkeys > 0,
+    %Turn on panel, resize figure?
+    if ~strcmpi(get(handles.HotkeyPanel, 'Visible'), 'on'),
+        set(handles.HotkeyPanel, 'Visible', 'on'); %turn on panel
+        cur_panel_pos = get(handles.HotkeyPanel, 'Position'); %get size of panel
+        %Adjust size of the overall figure
+        cur_pos = get(findobj('Tag', 'BSMFigure'), 'Position');
+        cur_pos([2 4]) = cur_pos([2 4]) + cur_panel_pos(4)*[-1 1];
+        set(findobj('Tag', 'BSMFigure'), 'Position', cur_pos);
+        %Move all of the top elements (outside ExecutePanel) up
+        for i = 1:length(handles.TopElements),
+            cur_pos = get(handles.TopElements(i), 'Position');
+            cur_pos(2) = cur_pos(2) + cur_panel_pos(4);
+            set(handles.TopElements(i), 'Position', cur_pos);
+        end
+        %Move all of the elements in ExecutePanel up
+        for i = 1:length(handles.ExecutePanelElements),
+            cur_pos = get(handles.ExecutePanelElements(i), 'Position');
+            cur_pos(2) = cur_pos(2) + cur_panel_pos(4);
+            set(handles.ExecutePanelElements(i), 'Position', cur_pos);
+        end
+        %Adjust ExecutePanel (need to downwardly adjust vertical position
+        %since it was just moved up)
+        cur_pos = get(handles.ExecutePanel, 'Position');
+        cur_pos([2 4]) = cur_pos([2 4]) + cur_panel_pos(4)*[-1 1];
+        set(handles.ExecutePanel, 'Position', cur_pos);
+    end
+    
+    %Initialize hotkey state to false
+    handles.doHotkey = false(min(5, handles.machine.NumHotkeys), 1);
+    %Need to sort them from left to right
+    HotkeyButtons = findobj('Tag', 'Hotkey');
+    HotkeyButtonsPosition = cell2mat(get(HotkeyButtons, 'Position'));
+    [~, sort_ind] = sort(HotkeyButtonsPosition(:, 1));
+    HotkeyButtons = HotkeyButtons(sort_ind);
+    %Name all of the hotkeys (hide others)
+    for i = 1:min(5, handles.machine.NumHotkeys),
+        set(HotkeyButtons(i), 'String', handles.machine.Hotkey(i).Name, 'Visible', 'on', 'Enable', 'on');
+    end
+    set(HotkeyButtons((min(5, handles.machine.NumHotkeys)+1):5), 'String', 'undefined', 'Visible', 'on', 'Enable', 'off');
+else
+    %Turn off panel, resize figure?
+    if strcmpi(get(handles.HotkeyPanel, 'Visible'), 'on'),
+        cur_panel_pos = get(handles.HotkeyPanel, 'Position'); %get size of panel
+        %Adjust size of the overall figure
+        cur_pos = get(findobj('Tag', 'BSMFigure'), 'Position');
+        cur_pos([2 4]) = cur_pos([2 4]) - cur_panel_pos(4)*[-1 1];
+        set(findobj('Tag', 'BSMFigure'), 'Position', cur_pos);
+        %Move all of the top elements (outside ExecutePanel) down
+        for i = 1:length(handles.TopElements),
+            cur_pos = get(handles.TopElements(i), 'Position');
+            cur_pos(2) = cur_pos(2) - cur_panel_pos(4);
+            set(handles.TopElements(i), 'Position', cur_pos);
+        end
+        %Move all of the elements in ExecutePanel down
+        for i = 1:length(handles.ExecutePanelElements),
+            cur_pos = get(handles.ExecutePanelElements(i), 'Position');
+            cur_pos(2) = cur_pos(2) - cur_panel_pos(4);
+            set(handles.ExecutePanelElements(i), 'Position', cur_pos);
+        end
+        %Adjust ExecutePanel (need to upwardly adjust vertical position
+        %since it was just moved down)
+        cur_pos = get(handles.ExecutePanel, 'Position');
+        cur_pos([2 4]) = cur_pos([2 4]) - cur_panel_pos(4)*[-1 1];
+        set(handles.ExecutePanel, 'Position', cur_pos);
+        %Turn off panel
+        set(handles.HotkeyPanel, 'Visible', 'off');
+    end
+end
+
 set(handles.StatusText, 'String', '');
+guidata(hObject, handles);
 
 
 function SetAllFields(hObject, handles),
@@ -166,13 +261,14 @@ set(handles.NumTrialsEdit, 'String', num2str(handles.machine.MaximumTrials));
 set(handles.SaveFilenameEdit, 'String', handles.machine.SaveFilename);
 
 %Editable variable names
-var_names = {};
+var_names = cell(handles.machine.NumConditionVars, 1); var_values = cell(handles.machine.NumConditionVars, 1); var_editable = true(handles.machine.NumConditionVars, 1);
 for i = 1:handles.machine.NumConditionVars,
     var_names{i} = handles.machine.ConditionVars(i).Name;
     var_values{i} = handles.machine.ConditionVars(i).Function;
+    var_editable(i) = handles.machine.ConditionVars(i).Editable;
 end
-set(handles.VarPopup, 'String', var_names);
-set(handles.VarEdit, 'String', '');
+set(handles.VarPopup, 'String', var_names(var_editable), 'Value', 1);
+set(handles.VarEdit, 'String', handles.machine.ConditionVars(find(var_editable, 1, 'first')).Function);
 
 %Set condition/trial information
 UpdateTrialText(handles, handles.machine);
@@ -250,11 +346,18 @@ end
 function UpdateRunningText(handles, machine),
 
 if ~isempty(machine.StartTime) & ~isnan(machine.StartTime),
+    %Set running time
     running_time = now - machine.StartTime;
     set(handles.RunningTimeText, 'String', datestr(running_time, 'HH:MM:SS'));
+    
+    %Set cycle rate
     if ~isnan(machine.AverageTrialCycleLength) & ~isempty(machine.AverageTrialCycleLength),
         set(handles.CycleRateText, 'String', sprintf('%4.0fHz [%4.0f:%4.0f]', 1./([machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength]*86400)));
     end
+    
+    %Estimate and set finish time
+    finish_time = running_time/machine.CurrentTrial*machine.MaximumTrials;
+    set(handles.EndTimeText, 'String', datestr(finish_time, 'HH:MM:SS'));
 end
 
 
@@ -333,8 +436,8 @@ set([handles.BSMFilenameEdit handles.BrowseBSMButton handles.LoadBSMButton handl
 set([handles.VarPopup handles.NumTrialsEdit handles.VarEdit], 'Enable', 'off');
 %Change background of the execute panel to 'run' color
 set([handles.ExecutePanel handles.text8 handles.text22 handles.text6 handles.text7 handles.text9 handles.text11 ...
-    handles.text15 handles.text17 handles.text24 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
-    handles.RunningTimeText handles.CycleRateText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
+    handles.text15 handles.text17 handles.text24 handles.text30 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
+    handles.RunningTimeText handles.CycleRateText handles.EndTimeText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
     'BackgroundColor', [0.757 0.867 0.776]);
 
 %Update handle structure
@@ -356,7 +459,6 @@ while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial 
         continue;
     end
     
-    
     %Write trial to file
     WriteMachineTrial(handles.SaveFID, my_machine);
     set(handles.StatusText, 'String', 'Inter-trial interval...'); drawnow;
@@ -371,6 +473,25 @@ while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial 
         UpdateStartText(handles, my_machine);
         UpdateRunningText(handles, my_machine);
         drawnow;
+        
+        %Check if user clicked a hotkey button
+        my_machine.doHotkey = handles.doHotkey;
+        if any(handles.doHotkey),
+            for i = 1:length(handles.doHotkey),
+                if handles.doHotkey(i),
+                    eval(my_machine.Hotkey(i).Logic);
+                    handles.doHotkey(i) = 0;
+                end
+            end
+            guidata(hObject, handles);
+        end
+        
+        %Check to see if we need to change condition set
+        if handles.NextConditionSet >= 0,
+            my_machine.CurrentConditionSet = handles.NextConditionSet;
+            handles.NextConditionSet = -1;
+            guidata(hObject, handles);
+        end
         
         %Check if user wants to pause/stop machine
         if (handles.doStopMachine) || (handles.doPauseMachine),
@@ -392,8 +513,8 @@ while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial 
             if handles.doPauseMachine,
                 %Change panel background to 'paused' color
                 set([handles.ExecutePanel handles.text8 handles.text22 handles.text6 handles.text7 handles.text9 handles.text11 ...
-                    handles.text15 handles.text17 handles.text24 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
-                    handles.RunningTimeText handles.CycleRateText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
+                    handles.text15 handles.text17 handles.text24 handles.text30 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
+                    handles.RunningTimeText handles.CycleRateText handles.EndTimeText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
                     'BackgroundColor', [0.871 0.922 0.98]);
                 
                 set(hObject, 'ForegroundColor', [0.165 0.384 0.275], 'BackgroundColor', [0.757 0.867 0.776], 'String', 'RUN');
@@ -418,8 +539,8 @@ while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial 
                 
                 %Change background of the execute panel to 'run' color
                 set([handles.ExecutePanel handles.text8 handles.text22 handles.text6 handles.text7 handles.text9 handles.text11 ...
-                    handles.text15 handles.text17 handles.text24 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
-                    handles.RunningTimeText handles.CycleRateText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
+                    handles.text15 handles.text17 handles.text24 handles.text30 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
+                    handles.RunningTimeText handles.CycleRateText handles.EndTimeText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
                     'BackgroundColor', [0.757 0.867 0.776]);
                 guidata(hObject, handles);
                 drawnow;
@@ -451,8 +572,8 @@ set(hObject, 'ForegroundColor', [0.165 0.384 0.275], 'BackgroundColor', [0.757 0
 %Change background to 'stop' color
 %Change panel background to 'stop' color
 set([handles.ExecutePanel handles.text8 handles.text22 handles.text6 handles.text7 handles.text9 handles.text11 ...
-    handles.text15 handles.text17 handles.text24 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
-    handles.RunningTimeText handles.CycleRateText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
+    handles.text15 handles.text17 handles.text24 handles.text30 handles.CurrentTrialText handles.CurrentConditionText handles.StartTimeText ...
+    handles.RunningTimeText handles.CycleRateText handles.EndTimeText handles.EndStateListTextLabel handles.EndStateListText handles.CondListTextLabel handles.CondListText], ...
     'BackgroundColor', get(handles.StopMachine, 'BackgroundColor'));
 set(handles.StatusText, 'String', ''); drawnow;
 guidata(hObject, handles);
@@ -778,9 +899,9 @@ function StopMachine_Callback(hObject, eventdata, handles)
 handles.doStopMachine = 1;
 guidata(hObject, handles);
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+% --- Executes when user attempts to close BSMFigure.
+function BSMFigure_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to BSMFigure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -810,3 +931,40 @@ set(handles.StatusText, 'String', '');
 
 % Hint: delete(hObject) closes the figure
 delete(hObject);
+
+
+% --- Executes on button press in CondSetToggleButton.
+function CondSetToggleButton_Callback(hObject, eventdata, handles)
+% hObject    handle to CondSetToggleButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of CondSetToggleButton
+
+if ~get(hObject, 'Value'), %already clicked
+    set(hObject, 'Value', 1);
+    return;
+end
+CondSetToggleButtons = findobj('Tag', 'CondSetToggleButton');
+set(CondSetToggleButtons, 'Value', 0); set(hObject, 'Value', 1);
+if strcmpi(get(hObject, 'String'), 'Baseline (0)'),
+    %Clicked baseline button
+    handles.NextConditionSet = 0;
+else
+    handles.NextConditionSet = eval(get(hObject, 'String'));
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in Hotkey.
+function Hotkey_Callback(hObject, eventdata, handles)
+% hObject    handle to Hotkey (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+for i = 1:handles.machine.NumHotkeys,
+    if strcmpi(get(hObject, 'String'), handles.machine.Hotkey(i).Name),
+        handles.doHotkey(i) = 1;
+    end
+end
+guidata(hObject, handles);
+
