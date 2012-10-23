@@ -247,6 +247,8 @@ else
         %Turn off panel
         set(handles.HotkeyPanel, 'Visible', 'off');
     end
+    %Initialize hotkey state to false
+    handles.doHotkey = [];
 end
 
 set(handles.StatusText, 'String', '');

@@ -36,6 +36,9 @@ for i = 1:machine.NumConditionVars,
     machine.ConditionVars(i).Function = ReplaceVariables(machine.ConditionVars(i).Function, var_list, machine_var_list);
 end
 
+% Parse the choose first condition function call
+machine.FirstCondition = ReplaceVariables(machine.FirstCondition, var_list, machine_var_list);
+
 % Parse the choose next condition function call
 machine.ChooseNextCondition.Logic = ReplaceVariables(machine.ChooseNextCondition.Logic, var_list, machine_var_list);
 
