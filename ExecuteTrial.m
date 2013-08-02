@@ -87,10 +87,32 @@ while machine.CurrentStateID > EndState,
         end
     end
     
+    %Update analog output(s)
+    for output_ind = 1:machine.States(machine.CurrentStateID).NumAnalogOutput,
+        cur_ao_ind = machine.States(machine.CurrentStateID).AnalogOutput(output_ind).AOIndex;
+        %If not running or nothing to write, skip it
+        if ~machine.AnalogOutputs(cur_ao_ind).DAQSession.IsRunning || isempty(machine.AnalogOutputs(cur_ao_ind).CurData),
+            continue;
+        end      
+        %Is it time to update this card?  Too fast and it hangs
+        time_since_checked = (machine.TimeInState - machine.AnalogOutputs(cur_ao_ind).LastChecked);
+        if  time_since_checked > (1000/machine.AnalogOutputQueryRate),
+            ind = [1:min(round(time_since_checked*machine.AnalogOutputs(cur_ao_ind).SourceRate), length(machine.AnalogOutputs(cur_ao_ind).CurData))];
+            machine.AnalogOutputs(cur_ao_ind).DAQSession.queueOutputData(machine.AnalogOutputs(cur_ao_ind).CurData(ind, :));
+            machine.AnalogOutputs(cur_ao_ind).CurData = machine.AnalogOutputs(cur_ao_ind).CurData((ind(end)+1):end, :);
+        end
+    end %analog output loop
+    
     %Otherwise we are in a trial -- check transitions
     for trans_ind = 1:machine.States(machine.CurrentStateID).NumTransitions,
         if eval(machine.States(machine.CurrentStateID).Transitions(trans_ind).Logic),
-            
+            output_ind = 1;
+            while ~machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) && ...
+                    (output_ind <= machine.States(machine.CurrentStateID).NumAnalogOutput),
+                machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) | ...
+                    ~isempty(machine.AnalogOutputs(machine.States(machine.CurrentStateID).AnalogOutput(output_ind).AOIndex).CurData);
+                output_ind = output_ind + 1;
+            end
             %Make transition from one state to the next
             machine = TransitionStates(machine, machine.CurrentStateID, ...
                 eval(machine.States(machine.CurrentStateID).Transitions(trans_ind).ToState));

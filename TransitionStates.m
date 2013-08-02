@@ -21,9 +21,10 @@ if machine.CurrentStateID <= 0,
     machine.TimeEnterState = now; % Time entered current state
     machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = machine.CurrentStateID;
     machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
+    machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = 0;
     machine.Interruptable = 1;
     %Still save Vars structure
-    machine.StateVarValue(machine.TrialStateCount) = machine.Vars;    
+    machine.StateVarValue(machine.TrialStateCount) = machine.Vars;
     return; %out of transition
 end
 
@@ -32,12 +33,26 @@ machine.CurrentStateName = machine.States(to_state).Name;
 
 % Set up analog outputs
 for output_ind = 1:machine.States(to_state).NumAnalogOutput,
-    if machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.IsRunning,
-        machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.stop;
+    cur_ao_ind = machine.States(to_state).AnalogOutput(output_ind).AOIndex;
+    while machine.AnalogOutputs(cur_ao_ind).DAQSession.IsRunning,
+        machine.AnalogOutputs(cur_ao_ind).DAQSession.stop;
+    end    
+    cur_data = eval(machine.States(to_state).AnalogOutput.Data);
+    if isnan(machine.AnalogOutputs(cur_ao_ind).MaxBufferSize),
+        %No buffer size specified, just write all values
+        buffer_ind = size(cur_data, 1);
+    else
+        %Write as many values as will fit in buffer
+        buffer_ind = min(machine.AnalogOutputs(cur_ao_ind).MaxBufferSize, size(cur_data, 1));
     end
-    machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.queueOutputData(...
-        eval(machine.States(to_state).AnalogOutput.Data));
-    machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.prepare();
+    %Queue data and start running
+    machine.AnalogOutputs(cur_ao_ind).DAQSession.queueOutputData(cur_data(1:buffer_ind, :));
+    machine.AnalogOutputs(cur_ao_ind).CurData = cur_data((buffer_ind+1):end, :);
+    if ~isempty(machine.AnalogOutputs(cur_ao_ind).CurData),
+        fprintf('WARNING: Buffer is not large enough to output all analog signals at once.\n\tThis might induce a slight delay every time it must be updated.\n');
+    end
+    machine.AnalogOutputs(cur_ao_ind).DAQSession.prepare();
+    machine.AnalogOutputs(cur_ao_ind).LastChecked = 0;
 end
 
 %Start them all as quickly as possible
@@ -61,6 +76,7 @@ machine.TimeEnterState = now; % Time entered current state
 machine.TrialStateCount = machine.TrialStateCount + 1;
 machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = to_state;
 machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
+machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = 0;
 machine.Interruptable = machine.States(to_state).Interruptable;
 
 %Do we need to re-set any strobe bits or monitor any 'true' digital outputs?

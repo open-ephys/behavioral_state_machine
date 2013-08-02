@@ -74,11 +74,21 @@ end
 %% Initialize DAQ sessions and objects for outputs
 
 %Create session for analog outputs
+machine.AnalogOutputQueryRate = 2; % queries/second
 for cur_ind = 1:machine.NumAnalogOutputs,
     
     %Establish session
     machine.AnalogOutputs(cur_ind).DAQSession = daq.createSession(machine.AnalogOutputs(cur_ind).SourceType);
     machine.AnalogOutputs(cur_ind).DAQSession.Rate = machine.AnalogOutputs(cur_ind).SourceRate;
+    %Check if we have buffer limitations in place
+    if ~isnan(machine.AnalogOutputs(cur_ind).MaxBufferSize),
+        machine.AnalogOutputs(cur_ind).DAQSession.IsContinuous = true;
+        if (machine.AnalogOutputs(cur_ind).MaxBufferSize < (machine.AnalogOutputs(cur_ind).SourceRate*2)), 
+            warning(sprintf('The maximum buffer size (%d samples per channel) was shorter than 2 seconds.  It is suggested you either increase buffer or reduce channels. Increasing buffer now.', machine.AnalogOutputs(cur_ind).MaxBufferSize));
+            machine.AnalogOutputs(cur_ind).MaxBufferSize = machine.AnalogOutputs(cur_ind).SourceRate*2;
+        end
+    end
+    machine.AnalogOutputs(cur_ind).DataRequiredListener = [];
     
     [machine.AnalogOutputs(cur_ind).ChannelHandle, ...
         machine.AnalogOutputs(cur_ind).ChannelIndex] = ...

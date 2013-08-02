@@ -50,8 +50,13 @@ for cur_state_ind = 1:machine.TrialStateCount,
     fwrite(fid, machine.TrialStateList{machine.CurrentTrial}(cur_state_ind), 'int32');
     %enter time
     fwrite(fid, machine.TrialStateEnterTimeList{machine.CurrentTrial}(cur_state_ind), 'double');
-    %and exit time
+    % exit time
     fwrite(fid, machine.TrialStateExitTimeList{machine.CurrentTrial}(cur_state_ind), 'double');
+    %did any analog outputs fail
+    fwrite(fid, length(machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(cur_state_ind)), 'uint32');
+    if ~isempty(machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(cur_state_ind)),
+        fwrite(fid, machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(cur_state_ind), 'double');
+    end
 end %state loop
 
 %% Write variables information

@@ -256,6 +256,7 @@ for cur_machine = 1:allMachines.getLength,
             cur_output.SourceName = char(thisAnalogOutput.getAttribute('SourceName'));
             cur_output.SourceType = char(thisAnalogOutput.getAttribute('SourceType'));
             cur_output.SourceRate = str2double(char(thisAnalogOutput.getAttribute('SourceRate')));
+            cur_output.MaxBufferSize = str2double(char(thisAnalogOutput.getAttribute('MaxBufferSize')));
             cur_output.DefaultValue = str2double(char(thisAnalogOutput.getAttribute('Name')));
             
             %Load channels

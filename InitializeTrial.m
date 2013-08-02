@@ -43,6 +43,7 @@ end
 %Initialize trial variables
 machine.TrialStateList{machine.CurrentTrial} = [0];
 machine.TrialStateEnterTimeList{machine.CurrentTrial} = now;
+machine.TrialStateAnalogOutputFailed{machine.CurrentTrial} = [0];
 machine.TrialStateCount = 1;
 
 % Loop through condition variables, update them for this trial -- NOTE THESE WILL BE CONSTANT THROUGOUT THE TRIAL

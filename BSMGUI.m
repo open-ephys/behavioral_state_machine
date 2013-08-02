@@ -354,7 +354,8 @@ if ~isempty(machine.StartTime) & ~isnan(machine.StartTime),
     
     %Set cycle rate
     if ~isnan(machine.AverageTrialCycleLength) & ~isempty(machine.AverageTrialCycleLength),
-        set(handles.CycleRateText, 'String', sprintf('%4.0fHz [%4.0f:%4.0f]', 1./([machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength]*86400)));
+        t = [machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength].*86400000; %in ms
+        set(handles.CycleRateText, 'String', sprintf('%4.0fHz [%4.0f:%4.0f]', 1000./t));
     end
     
     %Estimate and set finish time
@@ -457,6 +458,9 @@ while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial 
     catch errmsg
         set(handles.StatusText, 'String', 'ERROR in executing trial!'); drawnow;
         fprintf('ERROR: %s\n', errmsg.getReport);
+        fprintf('Current trial: %d\n', my_machine.CurrentTrial);
+        fprintf('Current condition: %d\n', my_machine.CurrentCondition);
+        fprintf('Current state: %d\n', my_machine.CurrentStateID);
         my_machine.Active = 0;
         continue;
     end

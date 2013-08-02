@@ -55,8 +55,15 @@ for cur_state_ind = 1:trial_struct.TrialStateCount,
     trial_struct.TrialStateList(cur_state_ind) = fread(fid, 1, 'int32');
     %enter time
     trial_struct.TrialStateEnterTimeList(cur_state_ind) = fread(fid, 1, 'double');
-    %and exit time
+    %exit time
     trial_struct.TrialStateExitTimeList(cur_state_ind) = fread(fid, 1, 'double');
+    %did any analog outputs fail
+    len = fread(fid, 1, 'uint32');
+    if len > 0,
+        trial_struct.TrialStateAnalogOutputFailed(cur_state_ind) = fread(fid, len, 'double');
+    else
+        trial_struct.TrialStateAnalogOutputFailed(cur_state_ind) = [];
+    end    
 end %state loop
 
 %% Read variables information
