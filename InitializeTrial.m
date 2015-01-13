@@ -6,14 +6,14 @@ function machine = InitializeTrial(machine)
 
 machine.Active = 1;
 machine.CurrentTrial = machine.CurrentTrial + 1;
-machine.TimeEnterState = now;
+machine.TimeEnterState = GetSecs;
 machine.TimeInState = 0;
 machine.CurrentStateID = 0;
 machine.TrialNumCycles = 0;
 machine.AverageTrialCycleLength = 0;
 machine.MaxTrialCycleLength = 0;
 machine.MinTrialCycleLength = Inf;
-machine.LastCycleTime = now;
+machine.LastCycleTime = GetSecs;
 machine.TrialStateCount = 0;
 
 %Pick current condition
@@ -42,7 +42,7 @@ end
 
 %Initialize trial variables
 machine.TrialStateList{machine.CurrentTrial} = [0];
-machine.TrialStateEnterTimeList{machine.CurrentTrial} = now;
+machine.TrialStateEnterTimeList{machine.CurrentTrial} = GetSecs;
 machine.TrialStateAnalogOutputFailed{machine.CurrentTrial} = [0];
 machine.TrialStateCount = 1;
 

@@ -12,13 +12,13 @@ end
 
 %Transition to new state
 machine.CurrentStateID = to_state;
-machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = now;
+machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = GetSecs;
 
 %If ITI or end of trial, just skip rest of the transition
 if machine.CurrentStateID <= 0,
     %Update key variables
     machine.TrialStateCount = machine.TrialStateCount + 1;
-    machine.TimeEnterState = now; % Time entered current state
+    machine.TimeEnterState = GetSecs; % Time entered current state
     machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = machine.CurrentStateID;
     machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
     machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = 0;
@@ -65,24 +65,22 @@ didStrobe = 0; didTrue = 0;
 for output_ind = 1:machine.States(to_state).NumDigitalOutput,
     machine.States(to_state).DigitalOutput(output_ind).CurrentData = ...
         eval(machine.States(to_state).DigitalOutput(output_ind).Data);
+    if size(machine.States(to_state).DigitalOutput(output_ind).CurrentData, 2) ~= length(machine.DigitalOutputs(machine.States(to_state).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject.Line),
+        error(sprintf('Data passed did not match expect line numbers (CurrentData = %s; # lines = %d)', num2str(size(machine.States(to_state).DigitalOutput(output_ind).CurrentData)), length(machine.DigitalOutputs(machine.States(to_state).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject.Line)));
+    end
     putvalue(machine.DigitalOutputs(machine.States(to_state).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject, ...
-        machine.States(to_state).DigitalOutput(output_ind).CurrentData(1));
+        machine.States(to_state).DigitalOutput(output_ind).CurrentData(1, :));
     didStrobe = didStrobe | machine.States(to_state).DigitalOutput(output_ind).doStrobe;
     didTrue = didTrue | machine.States(to_state).DigitalOutput(output_ind).doTrue;
 end
 
 %Set trial start time to now
-machine.TimeEnterState = now; % Time entered current state
-machine.TrialStateCount = machine.TrialStateCount + 1;
-machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = to_state;
-machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
-machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = 0;
-machine.Interruptable = machine.States(to_state).Interruptable;
+machine.TimeEnterState = GetSecs; % Time entered current state
 
 %Do we need to re-set any strobe bits or monitor any 'true' digital outputs?
 while didStrobe | didTrue,
     %Update time in state
-    machine.TimeInState = (now - machine.TimeEnterState)*86400000;
+    machine.TimeInState = (GetSecs - machine.TimeEnterState)*1000;
     if didStrobe & (machine.TimeInState >= 1),
         %Waited 1 ms, now re-set strobe
         for output_ind = 1:machine.States(to_state).NumDigitalOutput,
@@ -93,21 +91,27 @@ while didStrobe | didTrue,
         didStrobe = 0;
     end
     if didTrue,
-        didTrue = 0;
         digi_output_time = max(1, round(machine.TimeInState));
+        fprintf('%d\n', digi_output_time);
         for output_ind = 1:machine.States(to_state).NumDigitalOutput,
             if machine.States(to_state).DigitalOutput(output_ind).doTrue,
-                if (digi_output_time >= length(machine.States(to_state).DigitalOutput(output_ind).CurrentData)),
-                    digi_output_time = length(machine.States(to_state).DigitalOutput(output_ind).CurrentData);
-                else
-                    didTrue = 1;
+                if (digi_output_time >= size(machine.States(to_state).DigitalOutput(output_ind).CurrentData, 1)),
+                    digi_output_time = size(machine.States(to_state).DigitalOutput(output_ind).CurrentData, 1);
+                    didTrue = 0;
                 end
                 putvalue(machine.DigitalOutputs(machine.States(to_state).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject, ...
-                    machine.States(to_state).DigitalOutput(output_ind).CurrentData(digi_output_time));
+                    machine.States(to_state).DigitalOutput(output_ind).CurrentData(digi_output_time, :));
             end
         end
     end
 end %did strobe or true?
+
+%Update other counts
+machine.TrialStateCount = machine.TrialStateCount + 1;
+machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = to_state;
+machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
+machine.TrialStateAnalogOutputFailed{machine.CurrentTrial}(machine.TrialStateCount) = 0;
+machine.Interruptable = machine.States(to_state).Interruptable;
 
 %Do we need to execute any commands?
 for exec_ind = 1:machine.States(to_state).NumExecuteFunction,

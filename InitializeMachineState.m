@@ -7,14 +7,14 @@ function machine = InitializeMachineState(machine),
 machine.Active = 1;
 machine.CurrentTrial = 0;
 machine.StartTime = now;
-machine.TimeEnterState = now;
+machine.TimeEnterState = GetSecs;
 machine.TimeInState = 0;
 machine.CurrentStateID = 0;
 machine.TrialNumCycles = 0;
 machine.AverageTrialCycleLength = 0;
 machine.MinTrialCycleLength = Inf;
 machine.MaxTrialCycleLength = 0;
-machine.LastCycleTime = now;
+machine.LastCycleTime = GetSecs;
 machine.LastCycleLength = NaN;
 
 machine.TrialCondition = [];

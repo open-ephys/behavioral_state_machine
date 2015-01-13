@@ -349,12 +349,12 @@ function UpdateRunningText(handles, machine),
 
 if ~isempty(machine.StartTime) & ~isnan(machine.StartTime),
     %Set running time
-    running_time = now - machine.StartTime;
+    running_time = now - machine.StartTime; %start and end time is still in 'now' format; everything else is from GetSecs
     set(handles.RunningTimeText, 'String', datestr(running_time, 'HH:MM:SS'));
     
     %Set cycle rate
     if ~isnan(machine.AverageTrialCycleLength) & ~isempty(machine.AverageTrialCycleLength),
-        t = [machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength].*86400000; %in ms
+        t = [machine.AverageTrialCycleLength machine.MinTrialCycleLength machine.MaxTrialCycleLength].*1000; %in ms
         set(handles.CycleRateText, 'String', sprintf('%4.0fHz [%4.0f:%4.0f]', 1000./t));
     end
     

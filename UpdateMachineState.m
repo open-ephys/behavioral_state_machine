@@ -10,8 +10,8 @@ EndState = -1;
 ITIState = 0;
 
 %Update timing and cycle length
-machine.LastCycleLength = now - machine.LastCycleTime;
-machine.LastCycleTime = now;
+machine.LastCycleLength = GetSecs - machine.LastCycleTime;
+machine.LastCycleTime = GetSecs;
 machine.TrialNumCycles = machine.TrialNumCycles + 1;
 machine.AverageTrialCycleLength = (machine.AverageTrialCycleLength*(machine.TrialNumCycles-1) + machine.LastCycleLength)/machine.TrialNumCycles;
 
@@ -25,7 +25,7 @@ if (machine.CurrentStateID == ITIState),
     %Enter first state
     machine.CurrentStateID = machine.TrialStartState(machine.CurrentTrial);
     machine.CurrentStateName = machine.States(machine.CurrentStateID).Name;
-    machine.TimeEnterState = now; % Time entered current state
+    machine.TimeEnterState = GetSecs; % Time entered current state
     machine.TimeInState = 0;
     machine.TrialStateCount = 1;
     machine.TrialStateEnterTimeList{machine.CurrentTrial} = [machine.TimeEnterState];
@@ -38,12 +38,12 @@ for trans_ind = 1:machine.States(machine.CurrentStateID).NumTransitions,
     if eval(machine.States(machine.CurrentStateID).Transitions(trans_ind).Logic),
         %Transition to new state
         machine.CurrentStateID = eval(machine.States(machine.CurrentStateID).Transitions(trans_ind).ToState);
-        machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = now;
+        machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = GetSecs;
        
         %If ITI or end of trial, just skip rest of the transition
         if machine.CurrentStateID <= 0, 
             machine.TrialStateCount = machine.TrialStateCount + 1;
-            machine.TimeEnterState = now; % Time entered current state
+            machine.TimeEnterState = GetSecs; % Time entered current state
             machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = machine.CurrentStateID;
             machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
             machine.Interruptable = 1;
@@ -81,7 +81,7 @@ for trans_ind = 1:machine.States(machine.CurrentStateID).NumTransitions,
         end
         
         %Set trial start time to now
-        machine.TimeEnterState = now; % Time entered current state
+        machine.TimeEnterState = GetSecs; % Time entered current state
         machine.TrialStateCount = machine.TrialStateCount + 1;
         machine.TrialStateList{machine.CurrentTrial}(machine.TrialStateCount) = machine.CurrentStateID;
         machine.TrialStateEnterTimeList{machine.CurrentTrial}(machine.TrialStateCount) = machine.TimeEnterState;
@@ -90,7 +90,7 @@ for trans_ind = 1:machine.States(machine.CurrentStateID).NumTransitions,
         %Do we need to re-set any strobe bits?
         if didStrobe,
             %Wait 1 ms and re-set strobe
-            while (machine.TimeInState <= 1), machine.TimeInState = (now - machine.TimeEnterState)*86400000; end
+            while (machine.TimeInState <= 1), machine.TimeInState = (GetSecs - machine.TimeEnterState)*1000; end
             for output_ind = 1:machine.States(machine.CurrentStateID).NumDigitalOutput,
                 if machine.States(machine.CurrentStateID).DigitalOutput(output_ind).doStrobe,
                     putvalue(machine.DigitalOutputs(machine.States(machine.CurrentStateID).DigitalOutput(output_ind).StrobeDIOIndex).DigitalOutputObject, 0);

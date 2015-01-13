@@ -35,4 +35,4 @@ end %digital input object loop
 % end
 
 % Update the time in state variable
-machine.TimeInState = (now - machine.TimeEnterState)*86400000; % Time (ms) in current state, multiplying by 24*60*60*1000 to get to ms
+machine.TimeInState = (GetSecs - machine.TimeEnterState)*1000; % Time (ms) in current state, multiplying by 24*60*60*1000 to get to ms

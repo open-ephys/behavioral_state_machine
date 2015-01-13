@@ -38,7 +38,7 @@ while machine.CurrentTrial < machine.MaximumTrials,
     
     fprintf('Finished trial %d.\n', machine.CurrentTrial);
     fprintf('Did %d cycles last trial.\n', machine.TrialNumCycles);
-    fprintf('Average cycle length last trial: %5.2f ms.\n', machine.AverageTrialCycleLength*86400000);
+    fprintf('Average cycle length last trial: %5.2f ms.\n', machine.AverageTrialCycleLength*1000);
     
     tic;
     %Write trial to file

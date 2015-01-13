@@ -4,4 +4,4 @@ function machine = FinalizeTrial(machine),
 %
 % 6/21/12 Created by TJB
 machine.TrialEndState(machine.CurrentTrial) = machine.CurrentStateID;
-machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = now;
+machine.TrialStateExitTimeList{machine.CurrentTrial}(machine.TrialStateCount) = GetSecs;

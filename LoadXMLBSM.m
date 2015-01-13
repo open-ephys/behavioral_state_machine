@@ -170,8 +170,8 @@ for cur_machine = 1:allMachines.getLength,
                 clear cur_output;
                 cur_output.Channel = char(thisDigitalOutput.getAttribute('VarName'));
                 cur_output.Data = char(thisDigitalOutput.getAttribute('Function'));
-                cur_output.doStrobe = strcmpi(char(thisDigitalOutput.getAttribute('doStrobe')), 'true');
-                cur_output.doTrue = strcmpi(char(thisDigitalOutput.getAttribute('doTrue')), 'true');
+                cur_output.doStrobe = any(strcmpi(char(thisDigitalOutput.getAttribute('doStrobe')), {'true', '1'}));
+                cur_output.doTrue = any(strcmpi(char(thisDigitalOutput.getAttribute('doTrue')), {'true', '1'}));
                 
                 cur_state.DigitalOutput(cur_output_ind) = cur_output;
             end %analog output loop
@@ -263,6 +263,7 @@ for cur_machine = 1:allMachines.getLength,
             cur_output.SourceName = char(thisAnalogOutput.getAttribute('SourceName'));
             cur_output.SourceType = char(thisAnalogOutput.getAttribute('SourceType'));
             cur_output.SourceRate = str2double(char(thisAnalogOutput.getAttribute('SourceRate')));
+            cur_output.MaxBufferSize = str2double(char(thisAnalogOutput.getAttribute('MaxBufferSize')));
             cur_output.DefaultValue = str2double(char(thisAnalogOutput.getAttribute('Name')));
             
             %Load channels
@@ -486,5 +487,5 @@ else
     end
     
 end
->>>>>>> BSM 0.22, bug fixes in ExecuteFunction
+
 end

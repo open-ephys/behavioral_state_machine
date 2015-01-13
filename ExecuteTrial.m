@@ -24,7 +24,7 @@ while machine.CurrentStateID > EndState,
     %% Update variables
     % Loop through analog input variables
     for i = 1:machine.NumInputDAQSession,
-        x = machine.InputDAQSession(i).inputSingleScan; ts = now;
+        x = machine.InputDAQSession(i).inputSingleScan; ts = GetSecs;
         matching_vars = find([machine.AnalogInputs(:).MatchingSource] == i);
         for j = 1:length(matching_vars),
             cur_ind = matching_vars(j);
@@ -41,7 +41,7 @@ while machine.CurrentStateID > EndState,
     
     % Loop through digital input variables
     for i = 1:machine.NumDigitalInputObject,
-        x = getvalue(machine.DigitalInputObject(i)); ts = now;
+        x = getvalue(machine.DigitalInputObject(i)); ts = GetSecs;
         matching_vars = find([machine.DigitalInputs(:).MatchingSource] == i);
         for j = 1:length(matching_vars),
             cur_ind = matching_vars(j);
@@ -58,12 +58,12 @@ while machine.CurrentStateID > EndState,
         
     %% Update state of machine
     %Update timing and cycle length
-    machine.LastCycleLength = now - machine.LastCycleTime;
-    machine.LastCycleTime = now;
+    machine.LastCycleLength = GetSecs - machine.LastCycleTime;
+    machine.LastCycleTime = GetSecs;
     machine.AverageTrialCycleLength = (machine.AverageTrialCycleLength*(machine.TrialNumCycles-1) + machine.LastCycleLength)/machine.TrialNumCycles;
     if (machine.LastCycleLength > machine.MaxTrialCycleLength), machine.MaxTrialCycleLength = machine.LastCycleLength; end
     if (machine.LastCycleLength < machine.MinTrialCycleLength), machine.MinTrialCycleLength = machine.LastCycleLength; end
-    machine.TimeInState = (now - machine.TimeEnterState)*86400000; % Time (ms) in current state, multiplying by 24*60*60*1000 to get to ms
+    machine.TimeInState = (GetSecs - machine.TimeEnterState)*1000; % Time (ms) in current state, multiplying by 24*60*60*1000 to get to ms
     
     %If this machine is currently sitting at the 0 state (inter-trial interval)
     %and the ITI has gone on long enough, then initialize the trial
