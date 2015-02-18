@@ -38,7 +38,7 @@ for cur_machine = 1:allMachines.getLength,
     if ~isempty(thisMachine.getAttribute('BSMVersion')),
         BSM_machine.BSMVersion = str2double(char(thisMachine.getAttribute('BSMVersion')));
     else
-        BSM_machine.BSMVersion = 0.2;
+        BSM_machine.BSMVersion = 0.3;
     end
     if isnan(BSM_machine.BSMVersion), BSM_machine.BSMVersion = 1.0; end
     if ~isempty(thisMachine.getAttribute('ITILength')),
@@ -147,11 +147,8 @@ for cur_machine = 1:allMachines.getLength,
                 clear cur_output;
                 cur_output.Channel = char(thisAnalogOutput.getAttribute('VarName'));
                 cur_output.Data = char(thisAnalogOutput.getAttribute('Function'));
-                if ~isempty(char(thisAnalogOutput.getAttribute('ForceStop'))),
-                    cur_output.ForceStop = strcmpi(char(thisAnalogOutput.getAttribute('ForceStop')), 'true');
-                else
-                    cur_output.ForceStop = 0;
-                end
+                cur_output.ForceStop = any(strcmpi(char(thisAnalogOutput.getAttribute('ForceStop')), {'true', '1'}));
+                cur_output.doContinuous = any(strcmpi(char(thisAnalogOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
                 cur_state.AnalogOutput(cur_output_ind) = cur_output;
             end %analog output loop
@@ -172,6 +169,7 @@ for cur_machine = 1:allMachines.getLength,
                 cur_output.Data = char(thisDigitalOutput.getAttribute('Function'));
                 cur_output.doStrobe = any(strcmpi(char(thisDigitalOutput.getAttribute('doStrobe')), {'true', '1'}));
                 cur_output.doTrue = any(strcmpi(char(thisDigitalOutput.getAttribute('doTrue')), {'true', '1'}));
+                cur_output.doContinuous = any(strcmpi(char(thisDigitalOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
                 cur_state.DigitalOutput(cur_output_ind) = cur_output;
             end %analog output loop

@@ -38,6 +38,10 @@ for output_ind = 1:machine.States(to_state).NumAnalogOutput,
         machine.AnalogOutputs(cur_ao_ind).DAQSession.stop;
     end    
     cur_data = eval(machine.States(to_state).AnalogOutput.Data);
+    if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates,
+        machine.AnalogOutputs(cur_ind).DAQSession.outputSingleScan(cur_data);
+        continue;
+    end
     if isnan(machine.AnalogOutputs(cur_ao_ind).MaxBufferSize),
         %No buffer size specified, just write all values
         buffer_ind = size(cur_data, 1);
@@ -57,6 +61,7 @@ end
 
 %Start them all as quickly as possible
 for output_ind = 1:machine.States(to_state).NumAnalogOutput,
+    if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates, continue; end %skip continuously updated channels
     machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.startBackground();
 end
 

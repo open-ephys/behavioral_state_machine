@@ -81,6 +81,12 @@ while machine.CurrentStateID > EndState,
     digi_output_time = round(machine.TimeInState);
     for output_ind = 1:machine.States(machine.CurrentStateID).NumDigitalOutput,
         if (machine.States(machine.CurrentStateID).DigitalOutput(output_ind).doStrobe), continue; end %this was just a strobe
+        %Check to see if continuously updated, if so, update and move on
+        if (machine.States(machine.CurrentStateID).DigitalOutput(output_ind).doContinuousUpdates),
+            putvalue(machine.DigitalOutputs(machine.States(machine.CurrentStateID).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject, ...
+                eval(machine.States(machine.CurrentStateID).DigitalOutput(output_ind).Data));
+        end
+        %Otherwise feed the next time point
         if ((digi_output_time >= 1) && (digi_output_time <= length(machine.States(machine.CurrentStateID).DigitalOutput(output_ind).CurrentData))),
             putvalue(machine.DigitalOutputs(machine.States(machine.CurrentStateID).DigitalOutput(output_ind).DIOIndex).DigitalOutputObject, ...
                 machine.States(machine.CurrentStateID).DigitalOutput(output_ind).CurrentData(digi_output_time));
@@ -90,8 +96,17 @@ while machine.CurrentStateID > EndState,
     %Update analog output(s)
     for output_ind = 1:machine.States(machine.CurrentStateID).NumAnalogOutput,
         cur_ao_ind = machine.States(machine.CurrentStateID).AnalogOutput(output_ind).AOIndex;
-        %If not running or nothing to write, skip it
-        if ~machine.AnalogOutputs(cur_ao_ind).DAQSession.IsRunning || isempty(machine.AnalogOutputs(cur_ao_ind).CurData),
+        %If not running, skip it
+        if ~machine.AnalogOutputs(cur_ao_ind).DAQSession.IsRunning,
+            continue;
+        end   
+        %Check to see if continuously updated, if so, update and move on
+        if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates,
+            machine.AnalogOutputs(cur_ind).DAQSession.outputSingleScan(eval(machine.States(to_state).AnalogOutput.Data));
+            continue;
+        end
+        %If nothing to write, skip it
+        if isempty(machine.AnalogOutputs(cur_ao_ind).CurData),
             continue;
         end      
         %Is it time to update this card?  Too fast and it hangs

@@ -81,7 +81,7 @@ for cur_state = 1:machine.NumStates,
     end %transition loop
     
     % Write this state's analog outputs
-    fwrite(fid, machine.States(cur_state).NumAnalogOutput, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumAnalogOutput, 'double'); %# of analog outputs
     for cur_output = 1:machine.States(cur_state).NumAnalogOutput,
         % Channel
         fwrite(fid, length(machine.States(cur_state).AnalogOutput(cur_output).Channel), 'uint32'); fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).Channel, 'char*1');
@@ -89,12 +89,14 @@ for cur_state = 1:machine.NumStates,
         fwrite(fid, length(machine.States(cur_state).AnalogOutput(cur_output).Data), 'uint32'); fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).Data, 'char*1');
         %ForceStop
         fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).ForceStop, 'uint8');
+        %doContinuous
+        fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).doContinuousUpdates, 'uint8'); 
         %AOIndex
         fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).AOIndex, 'uint32');
     end %analog output loop
     
     % Write this state's digital outputs
-    fwrite(fid, machine.States(cur_state).NumDigitalOutput, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumDigitalOutput, 'double'); %# of digital outputs
     for cur_output = 1:machine.States(cur_state).NumDigitalOutput,
         % VarName
         fwrite(fid, length(machine.States(cur_state).DigitalOutput(cur_output).Channel), 'uint32'); fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).Channel, 'char*1');
@@ -104,10 +106,12 @@ for cur_state = 1:machine.NumStates,
         fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doStrobe, 'uint8');
         %doTrue
         fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doTrue, 'uint8');
+        %doContinuous
+        fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doContinuousUpdates, 'uint8');        
     end %digital output loop
     
     % Write this state's functions to-be-executed
-    fwrite(fid, machine.States(cur_state).NumExecuteFunction, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumExecuteFunction, 'double'); %# of functions to be executed
     for cur_func = 1:machine.States(cur_state).NumExecuteFunction,
         %Function
         fwrite(fid, length(machine.States(cur_state).ExecuteFunction(cur_func).Function), 'uint32'); fwrite(fid, machine.States(cur_state).ExecuteFunction(cur_func).Function, 'char*1');
