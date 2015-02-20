@@ -86,8 +86,12 @@ for cur_state = 1:machine.NumStates,
         %ForceStop
         machine.States(cur_state).AnalogOutput(cur_output).ForceStop = fread(fid, 1, 'uint8');
         %doContinuous
-        if machine.BSMVersion >= 0.3,            
-            machine.States(cur_state).AnalogOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+        if machine.BSMVersion >= 0.3,   
+            if machine.BSMVersion == 1,
+                warning('Not loading doContinuousUpdates flag because of bug in LoadXMLBSM that was initializing the BSM version to 1.0.  You might want to remove this if actually loading 1.0 machines.')
+            else
+                machine.States(cur_state).AnalogOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+            end
         end
         %AOIndex
         machine.States(cur_state).AnalogOutput(cur_output).AOIndex = fread(fid, 1, 'uint32');
@@ -105,8 +109,12 @@ for cur_state = 1:machine.NumStates,
         %doTrue
         machine.States(cur_state).DigitalOutput(cur_output).doTrue = fread(fid, 1, 'uint8');
         %doContinuous
-        if machine.BSMVersion >= 0.3,
-            machine.States(cur_state).DigitalOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+        if (machine.BSMVersion >= 0.3),
+            if machine.BSMVersion == 1,
+                warning('Not loading doContinuousUpdates flag because of bug in LoadXMLBSM that was initializing the BSM version to 1.0.  You might want to remove this if actually loading 1.0 machines.')
+            else
+                machine.States(cur_state).DigitalOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+            end
         end
     end %digital output loop
     

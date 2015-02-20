@@ -35,7 +35,7 @@ for cur_machine = 1:allMachines.getLength,
     BSM_machine.TrialNumCycles = 0;
     BSM_machine.StartTime = NaN;
     BSM_machine.EndTime = NaN;
-    if ~isempty(thisMachine.getAttribute('BSMVersion')),
+    if ~isempty(char(thisMachine.getAttribute('BSMVersion'))),
         BSM_machine.BSMVersion = str2double(char(thisMachine.getAttribute('BSMVersion')));
     else
         BSM_machine.BSMVersion = 0.3;
