@@ -38,8 +38,9 @@ for output_ind = 1:machine.States(to_state).NumAnalogOutput,
         machine.AnalogOutputs(cur_ao_ind).DAQSession.stop;
     end    
     cur_data = eval(machine.States(to_state).AnalogOutput.Data);
-    if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates,
-        machine.AnalogOutputs(cur_ind).DAQSession.outputSingleScan(cur_data);
+    if machine.States(to_state).AnalogOutput(output_ind).doContinuousUpdates,
+        machine.AnalogOutputs(cur_ao_ind).DAQSession.outputSingleScan(cur_data);
+        machine.AnalogOutputs(cur_ao_ind).CurData = cur_data;
         continue;
     end
     if isnan(machine.AnalogOutputs(cur_ao_ind).MaxBufferSize),
@@ -61,7 +62,7 @@ end
 
 %Start them all as quickly as possible
 for output_ind = 1:machine.States(to_state).NumAnalogOutput,
-    if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates, continue; end %skip continuously updated channels
+    if (machine.States(to_state).AnalogOutput(output_ind).doContinuousUpdates), continue; end %skip continuously updated channels
     machine.AnalogOutputs(machine.States(to_state).AnalogOutput(output_ind).AOIndex).DAQSession.startBackground();
 end
 
@@ -97,7 +98,6 @@ while didStrobe | didTrue,
     end
     if didTrue,
         digi_output_time = max(1, round(machine.TimeInState));
-        fprintf('%d\n', digi_output_time);
         for output_ind = 1:machine.States(to_state).NumDigitalOutput,
             if machine.States(to_state).DigitalOutput(output_ind).doTrue,
                 if (digi_output_time >= size(machine.States(to_state).DigitalOutput(output_ind).CurrentData, 1)),

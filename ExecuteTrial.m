@@ -79,7 +79,7 @@ while machine.CurrentStateID > EndState,
     
     %Update digital output(s)
     digi_output_time = round(machine.TimeInState);
-    for output_ind = 1:machine.States(machine.CurrentStateID).NumDigitalOutput,
+    for output_ind = 1:machine.States(machine.CurrentStateID).NumDigitalOutput,        
         if (machine.States(machine.CurrentStateID).DigitalOutput(output_ind).doStrobe), continue; end %this was just a strobe
         %Check to see if continuously updated, if so, update and move on
         if (machine.States(machine.CurrentStateID).DigitalOutput(output_ind).doContinuousUpdates),
@@ -96,19 +96,25 @@ while machine.CurrentStateID > EndState,
     %Update analog output(s)
     for output_ind = 1:machine.States(machine.CurrentStateID).NumAnalogOutput,
         cur_ao_ind = machine.States(machine.CurrentStateID).AnalogOutput(output_ind).AOIndex;
+   
+        %Check to see if continuously updated, if so, update and move on
+        if machine.States(machine.CurrentStateID).AnalogOutput(output_ind).doContinuousUpdates,
+            machine.AnalogOutputs(cur_ao_ind).CurData = ...
+                eval(machine.States(machine.CurrentStateID).AnalogOutput(output_ind).Data);
+            machine.AnalogOutputs(cur_ind).DAQSession.outputSingleScan(machine.AnalogOutputs(cur_ao_ind).CurData);
+            continue;
+        end
+        
         %If not running, skip it
         if ~machine.AnalogOutputs(cur_ao_ind).DAQSession.IsRunning,
             continue;
-        end   
-        %Check to see if continuously updated, if so, update and move on
-        if machine.AnalogOutputs(cur_ao_ind).doContinuousUpdates,
-            machine.AnalogOutputs(cur_ind).DAQSession.outputSingleScan(eval(machine.States(to_state).AnalogOutput.Data));
-            continue;
         end
+        
         %If nothing to write, skip it
         if isempty(machine.AnalogOutputs(cur_ao_ind).CurData),
             continue;
         end      
+        
         %Is it time to update this card?  Too fast and it hangs
         time_since_checked = (machine.TimeInState - machine.AnalogOutputs(cur_ao_ind).LastChecked);
         if  time_since_checked > (1000/machine.AnalogOutputQueryRate),
