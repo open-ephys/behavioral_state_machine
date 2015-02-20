@@ -150,8 +150,6 @@ for cur_machine = 1:allMachines.getLength,
                 cur_output.ForceStop = any(strcmpi(char(thisAnalogOutput.getAttribute('ForceStop')), {'true', '1'}));
                 cur_output.doContinuousUpdates = any(strcmpi(char(thisAnalogOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
-                cur_output
-                
                 cur_state.AnalogOutput(cur_output_ind) = cur_output;
             end %analog output loop
             cur_state.NumAnalogOutput = length(cur_state.AnalogOutput);
@@ -171,7 +169,6 @@ for cur_machine = 1:allMachines.getLength,
                 cur_output.Data = char(thisDigitalOutput.getAttribute('Function'));
                 cur_output.doStrobe = any(strcmpi(char(thisDigitalOutput.getAttribute('doStrobe')), {'true', '1'}));
                 cur_output.doTrue = any(strcmpi(char(thisDigitalOutput.getAttribute('doTrue')), {'true', '1'}));
-                char(thisDigitalOutput.getAttribute('doContinuousUpdates'))
                 cur_output.doContinuousUpdates = any(strcmpi(char(thisDigitalOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
                 cur_state.DigitalOutput(cur_output_ind) = cur_output;
