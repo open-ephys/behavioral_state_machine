@@ -81,7 +81,7 @@ for cur_state = 1:machine.NumStates,
     end %transition loop
     
     % Write this state's analog outputs
-    fwrite(fid, machine.States(cur_state).NumAnalogOutput, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumAnalogOutput, 'double'); %# of analog outputs
     for cur_output = 1:machine.States(cur_state).NumAnalogOutput,
         % Channel
         fwrite(fid, length(machine.States(cur_state).AnalogOutput(cur_output).Channel), 'uint32'); fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).Channel, 'char*1');
@@ -89,12 +89,29 @@ for cur_state = 1:machine.NumStates,
         fwrite(fid, length(machine.States(cur_state).AnalogOutput(cur_output).Data), 'uint32'); fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).Data, 'char*1');
         %ForceStop
         fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).ForceStop, 'uint8');
+        %doContinuous
+        fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).doContinuousUpdates, 'uint8'); 
         %AOIndex
         fwrite(fid, machine.States(cur_state).AnalogOutput(cur_output).AOIndex, 'uint32');
     end %analog output loop
     
+    % Write this state's counter outputs
+    fwrite(fid, machine.States(cur_state).NumCounterOutput, 'double'); %# of analog outputs
+    for cur_output = 1:machine.States(cur_state).NumCounterOutput,
+        % Channel
+        fwrite(fid, length(machine.States(cur_state).CounterOutput(cur_output).Channel), 'uint32'); fwrite(fid, machine.States(cur_state).CounterOutput(cur_output).Channel, 'char*1');
+        %Data
+        fwrite(fid, length(machine.States(cur_state).CounterOutput(cur_output).Data), 'uint32'); fwrite(fid, machine.States(cur_state).CounterOutput(cur_output).Data, 'char*1');
+        %ForceStop
+        fwrite(fid, machine.States(cur_state).CounterOutput(cur_output).ForceStop, 'uint8');
+        %doContinuous
+        fwrite(fid, machine.States(cur_state).CounterOutput(cur_output).doContinuousUpdates, 'uint8'); 
+        %AOIndex
+        fwrite(fid, machine.States(cur_state).CounterOutput(cur_output).COIndex, 'uint32');
+    end %counter output loop
+    
     % Write this state's digital outputs
-    fwrite(fid, machine.States(cur_state).NumDigitalOutput, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumDigitalOutput, 'double'); %# of digital outputs
     for cur_output = 1:machine.States(cur_state).NumDigitalOutput,
         % VarName
         fwrite(fid, length(machine.States(cur_state).DigitalOutput(cur_output).Channel), 'uint32'); fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).Channel, 'char*1');
@@ -104,10 +121,12 @@ for cur_state = 1:machine.NumStates,
         fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doStrobe, 'uint8');
         %doTrue
         fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doTrue, 'uint8');
+        %doContinuous
+        fwrite(fid, machine.States(cur_state).DigitalOutput(cur_output).doContinuousUpdates, 'uint8');        
     end %digital output loop
     
     % Write this state's functions to-be-executed
-    fwrite(fid, machine.States(cur_state).NumExecuteFunction, 'double'); %# of transitions
+    fwrite(fid, machine.States(cur_state).NumExecuteFunction, 'double'); %# of functions to be executed
     for cur_func = 1:machine.States(cur_state).NumExecuteFunction,
         %Function
         fwrite(fid, length(machine.States(cur_state).ExecuteFunction(cur_func).Function), 'uint32'); fwrite(fid, machine.States(cur_state).ExecuteFunction(cur_func).Function, 'char*1');
@@ -143,6 +162,31 @@ for cur_output = 1:machine.NumAnalogOutputs,
         fwrite(fid, machine.AnalogOutputs(cur_output).SourceParameters{i}, 'char*1');
     end
 end %analog output loop
+
+
+%Counter outputs
+fwrite(fid, machine.NumCounterOutputs, 'uint32');
+for cur_output = 1:machine.NumCounterOutputs,
+    %Name
+    fwrite(fid, length(machine.CounterOutputs(cur_output).Name), 'uint32'); fwrite(fid, machine.CounterOutputs(cur_output).Name, 'char*1');
+    %Source name
+    fwrite(fid, length(machine.CounterOutputs(cur_output).SourceName), 'uint32'); fwrite(fid, machine.CounterOutputs(cur_output).SourceName, 'char*1');
+    %Source type
+    fwrite(fid, length(machine.CounterOutputs(cur_output).SourceType), 'uint32'); fwrite(fid, machine.CounterOutputs(cur_output).SourceType, 'char*1');
+    %Source rate
+    fwrite(fid, machine.CounterOutputs(cur_output).SourceRate, 'double');
+    %Default value
+    fwrite(fid, machine.CounterOutputs(cur_output).DefaultValue, 'double');
+    %Channel(s)
+    fwrite(fid, length(machine.CounterOutputs(cur_output).Channel), 'uint32');
+    fwrite(fid, machine.CounterOutputs(cur_output).Channel, 'uint32');
+    %Source parameters
+    fwrite(fid, length(machine.CounterOutputs(cur_output).SourceParameters), 'uint32');
+    for i = 1:length(machine.CounterOutputs(cur_output).SourceParameters),
+        fwrite(fid, length(machine.CounterOutputs(cur_output).SourceParameters{i}), 'uint32');
+        fwrite(fid, machine.CounterOutputs(cur_output).SourceParameters{i}, 'char*1');
+    end
+end %counter output loop
 
 %Digital outputs
 fwrite(fid, machine.NumDigitalOutputs, 'uint32');

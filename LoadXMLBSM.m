@@ -35,10 +35,10 @@ for cur_machine = 1:allMachines.getLength,
     BSM_machine.TrialNumCycles = 0;
     BSM_machine.StartTime = NaN;
     BSM_machine.EndTime = NaN;
-    if ~isempty(thisMachine.getAttribute('BSMVersion')),
+    if ~isempty(char(thisMachine.getAttribute('BSMVersion'))),
         BSM_machine.BSMVersion = str2double(char(thisMachine.getAttribute('BSMVersion')));
     else
-        BSM_machine.BSMVersion = 0.2;
+        BSM_machine.BSMVersion = 0.4;
     end
     if isnan(BSM_machine.BSMVersion), BSM_machine.BSMVersion = 1.0; end
     if ~isempty(thisMachine.getAttribute('ITILength')),
@@ -147,11 +147,8 @@ for cur_machine = 1:allMachines.getLength,
                 clear cur_output;
                 cur_output.Channel = char(thisAnalogOutput.getAttribute('VarName'));
                 cur_output.Data = char(thisAnalogOutput.getAttribute('Function'));
-                if ~isempty(char(thisAnalogOutput.getAttribute('ForceStop'))),
-                    cur_output.ForceStop = strcmpi(char(thisAnalogOutput.getAttribute('ForceStop')), 'true');
-                else
-                    cur_output.ForceStop = 0;
-                end
+                cur_output.ForceStop = any(strcmpi(char(thisAnalogOutput.getAttribute('ForceStop')), {'true', '1'}));
+                cur_output.doContinuousUpdates = any(strcmpi(char(thisAnalogOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
                 cur_state.AnalogOutput(cur_output_ind) = cur_output;
             end %analog output loop
@@ -159,6 +156,26 @@ for cur_machine = 1:allMachines.getLength,
         else
             cur_state.AnalogOutput = [];
             cur_state.NumAnalogOutput = 0;
+        end
+        
+        %Load counter outputs
+        stateCounterOutputs = thisState.getElementsByTagName('CounterOutput');
+        if stateCounterOutputs.getLength > 0,
+            for cur_output_ind = 1:stateCounterOutputs.getLength,
+                thisCounterOutput = stateCounterOutputs.item(cur_output_ind-1);
+                
+                clear cur_output;
+                cur_output.Channel = char(thisCounterOutput.getAttribute('VarName'));
+                cur_output.Data = char(thisCounterOutput.getAttribute('Function'));
+                cur_output.ForceStop = any(strcmpi(char(thisCounterOutput.getAttribute('ForceStop')), {'true', '1'}));
+                cur_output.doContinuousUpdates = any(strcmpi(char(thisCounterOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
+                
+                cur_state.CounterOutput(cur_output_ind) = cur_output;
+            end %analog output loop
+            cur_state.NumCounterOutput = length(cur_state.CounterOutput);
+        else
+            cur_state.CounterOutput = [];
+            cur_state.NumCounterOutput = 0;
         end
         
         %Load digital outputs
@@ -172,6 +189,7 @@ for cur_machine = 1:allMachines.getLength,
                 cur_output.Data = char(thisDigitalOutput.getAttribute('Function'));
                 cur_output.doStrobe = any(strcmpi(char(thisDigitalOutput.getAttribute('doStrobe')), {'true', '1'}));
                 cur_output.doTrue = any(strcmpi(char(thisDigitalOutput.getAttribute('doTrue')), {'true', '1'}));
+                cur_output.doContinuousUpdates = any(strcmpi(char(thisDigitalOutput.getAttribute('doContinuousUpdates')), {'true', '1'}));
                 
                 cur_state.DigitalOutput(cur_output_ind) = cur_output;
             end %analog output loop
@@ -245,7 +263,7 @@ for cur_machine = 1:allMachines.getLength,
         end %transitions loop
     end
             
-    % Add analog/digital outputs
+    % Add analog outputs
     machineAnalogOutputs = thisMachine.getElementsByTagName('AnalogOutput');
     if machineAnalogOutputs.getLength > 0,
         output_count = 0;
@@ -293,6 +311,55 @@ for cur_machine = 1:allMachines.getLength,
         BSM_machine.NumAnalogOutputs = 0;
     end
     
+    % Add counter outputs
+    machineCounterOutputs = thisMachine.getElementsByTagName('CounterOutput');
+    if machineCounterOutputs.getLength > 0,
+        output_count = 0;
+        for cur_output_ind = 1:machineCounterOutputs.getLength,
+            thisCounterOutput = machineCounterOutputs.item(cur_output_ind-1);
+            
+            %Check to make sure this is a direct child (and not in a state)
+            if ~strcmpi(thisCounterOutput.getParentNode.getNodeName, 'machine'),
+                continue;
+            end
+            
+            %Set output parameters
+            clear cur_output;
+            cur_output.Name = char(thisCounterOutput.getAttribute('Name'));
+            cur_output.SourceName = char(thisCounterOutput.getAttribute('SourceName'));
+            cur_output.SourceType = char(thisCounterOutput.getAttribute('SourceType'));
+            cur_output.SourceRate = str2double(char(thisCounterOutput.getAttribute('SourceRate')));
+            cur_output.MaxBufferSize = str2double(char(thisCounterOutput.getAttribute('MaxBufferSize')));
+            cur_output.DefaultValue = str2double(char(thisCounterOutput.getAttribute('Name')));
+            
+            %Load channels
+            cur_output.Channel = [];
+            outputChannels = thisCounterOutput.getElementsByTagName('Channel');
+            for cur_channel_ind = 1:outputChannels.getLength,
+                cur_output.Channel = cat(1, cur_output.Channel, ...
+                    str2double(char(outputChannels.item(cur_channel_ind-1).getFirstChild.getData)));
+            end
+            
+            %Load source parameters
+            cur_output.SourceParameters = {};
+            outputParameters = thisCounterOutput.getElementsByTagName('SourceParameter');
+            if outputParameters.getLength > 0,
+                for cur_channel_ind = 1:outputParameters.getLength,
+                    cur_output.SourceParameters.(outputChannels.item(cur_channel_ind-1).getAttribute('Key')) = ...
+                        char(outputChannels.item(cur_channel_ind-1).getAttribute('Value'));
+                end
+            end
+            
+            output_count = output_count + 1;
+            BSM_machine.CounterOutputs(output_count) = cur_output;
+        end %counter output loop
+        BSM_machine.NumCounterOutputs = length(BSM_machine.CounterOutputs);
+    else
+        BSM_machine.CounterOutputs = [];
+        BSM_machine.NumCounterOutputs = 0;
+    end
+    
+    %Add digital outputs
     machineDigitalOutputs = thisMachine.getElementsByTagName('DigitalOutput');
     if machineDigitalOutputs.getLength > 0,
         output_count = 0;

@@ -81,6 +81,11 @@ for state_ind = 1:machine.NumStates,
             ReplaceVariables(machine.States(state_ind).AnalogOutput(analog_out_ind).Data, var_list, machine_var_list);
     end %analog output loop
     
+    for counter_out_ind = 1:machine.States(state_ind).NumCounterOutput,
+        machine.States(state_ind).CounterOutput(counter_out_ind).Data = ...
+            ReplaceVariables(machine.States(state_ind).CounterOutput(counter_out_ind).Data, var_list, machine_var_list);
+    end %counter output loop
+    
     for digital_out_ind = 1:machine.States(state_ind).NumDigitalOutput,
         machine.States(state_ind).DigitalOutput(digital_out_ind).Data = ...
             ReplaceVariables(machine.States(state_ind).DigitalOutput(digital_out_ind).Data, var_list, machine_var_list);

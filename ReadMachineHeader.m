@@ -77,7 +77,7 @@ for cur_state = 1:machine.NumStates,
     end %transition loop
     
     % Read this state's analog outputs
-    machine.States(cur_state).NumAnalogOutput = fread(fid, 1, 'double'); %# of transitions
+    machine.States(cur_state).NumAnalogOutput = fread(fid, 1, 'double'); %# of analog outputs
     for cur_output = 1:machine.States(cur_state).NumAnalogOutput,
         % Channel
         str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).AnalogOutput(cur_output).Channel = char(fread(fid, str_len, 'char*1')');
@@ -85,12 +85,20 @@ for cur_state = 1:machine.NumStates,
         str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).AnalogOutput(cur_output).Data = char(fread(fid, str_len, 'char*1')');
         %ForceStop
         machine.States(cur_state).AnalogOutput(cur_output).ForceStop = fread(fid, 1, 'uint8');
+        %doContinuous
+        if machine.BSMVersion >= 0.3,   
+            if machine.BSMVersion == 1,
+                warning('Not loading doContinuousUpdates flag because of bug in LoadXMLBSM that was initializing the BSM version to 1.0.  You might want to remove this if actually loading 1.0 machines.')
+            else
+                machine.States(cur_state).AnalogOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+            end
+        end
         %AOIndex
         machine.States(cur_state).AnalogOutput(cur_output).AOIndex = fread(fid, 1, 'uint32');
     end %analog output loop
     
     % Read this state's digital outputs
-    machine.States(cur_state).NumDigitalOutput = fread(fid, 1, 'double'); %# of transitions
+    machine.States(cur_state).NumDigitalOutput = fread(fid, 1, 'double'); %# of digital outputs
     for cur_output = 1:machine.States(cur_state).NumDigitalOutput,
         % VarName
         str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).DigitalOutput(cur_output).Channel = char(fread(fid, str_len, 'char*1')');
@@ -100,10 +108,18 @@ for cur_state = 1:machine.NumStates,
         machine.States(cur_state).DigitalOutput(cur_output).doStrobe = fread(fid, 1, 'uint8');
         %doTrue
         machine.States(cur_state).DigitalOutput(cur_output).doTrue = fread(fid, 1, 'uint8');
+        %doContinuous
+        if (machine.BSMVersion >= 0.3),
+            if machine.BSMVersion == 1,
+                warning('Not loading doContinuousUpdates flag because of bug in LoadXMLBSM that was initializing the BSM version to 1.0.  You might want to remove this if actually loading 1.0 machines.')
+            else
+                machine.States(cur_state).DigitalOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+            end
+        end
     end %digital output loop
     
     % Read this state's functions to-be-executed
-    machine.States(cur_state).NumExecuteFunction = fread(fid, 1, 'double'); %# of transitions
+    machine.States(cur_state).NumExecuteFunction = fread(fid, 1, 'double'); %# of functions to be executed
     for cur_func = 1:machine.States(cur_state).NumExecuteFunction,
         % Logic
         str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).ExecuteFunction(cur_func).Function = char(fread(fid, str_len, 'char*1')');

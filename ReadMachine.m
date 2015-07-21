@@ -4,6 +4,9 @@ function machine = ReadMachine(fid)
 %
 % Created 6/28/12 by TJB
 
+%Reset FID to beginning of the file
+fseek(fid, 0, 'bof'); 
+
 %Read header information
 machine = ReadMachineHeader(fid);
 

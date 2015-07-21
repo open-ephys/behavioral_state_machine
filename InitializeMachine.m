@@ -13,6 +13,11 @@ machine.IsDAQInitialized = 1;
 
 %% Initialize DAQ sessions and objects for inputs
 
+%Fix some wierd issue with newer drivers causing PCI cards to be seen as
+%external chassis?
+daq.reset;
+daq.HardwareInfo.getInstance('DisableReferenceClockSynchronization',true);
+
 %Create session for analog inputs
 if machine.NumAnalogInputs > 0,
 [~,uniq_analog_inputs_ind,matching_analog_inputs] = unique(strcat({machine.AnalogInputs(:).SourceName}, {machine.AnalogInputs(:).SourceType}, {machine.AnalogInputs(:).SourceRate}));
@@ -36,7 +41,6 @@ for cur_ind = 1:length(uniq_analog_inputs_ind),
     end %matching channel loop
     %Save what DAQ source each variable should point to
     machine.AnalogInputs(cur_matching_ind).MatchingSource = cur_ind;
-    
     machine.InputDAQSession(cur_ind).prepare();
 end %unique analog input types loop
 else
@@ -107,6 +111,40 @@ for state_ind = 1:machine.NumStates,
         if isempty(cur_ao_index), error('State %d: %s will attempt to output to channel %s, which doesn''t exist.', ...
                 state_ind, machine.States(state_ind).Name, machine.States(state_ind).AnalogOutput(cur_ind).Channel); end
         machine.States(state_ind).AnalogOutput(cur_ind).AOIndex = cur_ao_index;
+    end
+end
+
+
+%Create session for counter outputs
+for cur_ind = 1:machine.NumCounterOutputs,
+    
+    %Establish session
+    machine.CounterOutputs(cur_ind).DAQSession = daq.createSession(machine.CounterOutputs(cur_ind).SourceType);
+    machine.CounterOutputs(cur_ind).DAQSession.Rate = machine.CounterOutputs(cur_ind).SourceRate;
+    machine.CounterOutputs(cur_ind).DAQSession.IsContinuous = 1;
+    
+    [machine.CounterOutputs(cur_ind).ChannelHandle, ...
+        machine.CounterOutputs(cur_ind).ChannelIndex] = ...
+        machine.CounterOutputs(cur_ind).DAQSession.addCounterOutputChannel(...
+        machine.CounterOutputs(cur_ind).SourceName, ...
+        machine.CounterOutputs(cur_ind).Channel, 'PulseGeneration');
+    
+    %Set the rate to match the source rate (no need to be different)
+    machine.CounterOutputs(cur_ind).ChannelHandle.Frequency = machine.CounterOutputs(cur_ind).SourceRate;
+    %Set the initial delay to 0
+    machine.CounterOutputs(cur_ind).ChannelHandle.InitialDelay = 0;
+    %Set initial duty cycle
+    if isnan(machine.CounterOutputs(cur_ind).DefaultValue), machine.CounterOutputs(cur_ind).DefaultValue = 0.01; end
+    machine.CounterOutputs(cur_ind).ChannelHandle.DutyCycle = machine.CounterOutputs(cur_ind).DefaultValue;
+end %analog output loop
+
+%Validate all of the state counter output variables
+for state_ind = 1:machine.NumStates,
+    for cur_ind = 1:machine.States(state_ind).NumCounterOutput,
+        cur_co_index = find(strcmp({machine.CounterOutputs(:).Name}, machine.States(state_ind).CounterOutput(cur_ind).Channel));
+        if isempty(cur_co_index), error('State %d: %s will attempt to output to channel %s, which doesn''t exist.', ...
+                state_ind, machine.States(state_ind).Name, machine.States(state_ind).CounterOutput(cur_ind).Channel); end
+        machine.States(state_ind).CounterOutput(cur_ind).COIndex = cur_co_index;
     end
 end
 

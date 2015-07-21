@@ -203,5 +203,4 @@ for cur_var = 1:num_vars,
     
     trial_struct.SaveVarValue.(var_name) = temp_var;
     trial_struct.SaveVarTimestamp.(var_name) = temp_ts;
->>>>>>> BSM 0.22, bug fixes in ExecuteFunction
 end %variables loop
