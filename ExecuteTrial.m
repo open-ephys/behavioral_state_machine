@@ -124,6 +124,18 @@ while machine.CurrentStateID > EndState,
         end
     end %analog output loop
     
+    %Update counter output(s)
+    for output_ind = 1:machine.States(machine.CurrentStateID).NumCounterOutput,
+        cur_co_ind = machine.States(machine.CurrentStateID).CounterOutput(output_ind).COIndex;
+        
+        %Check to see if continuously updated, if so, update and move on
+        if machine.States(machine.CurrentStateID).CounterOutput(output_ind).doContinuousUpdates,
+            machine.CounterOutputs(cur_co_ind).CurData = ...
+                eval(machine.States(machine.CurrentStateID).CounterOutput(output_ind).Data);
+            machine.CounterOutputs(cur_co_ind).ChannelHandle.DutyCycle = machine.CounterOutputs(cur_co_ind).CurData;
+        end
+    end %counter output loop
+    
     %Otherwise we are in a trial -- check transitions
     for trans_ind = 1:machine.States(machine.CurrentStateID).NumTransitions,
         if eval(machine.States(machine.CurrentStateID).Transitions(trans_ind).Logic),

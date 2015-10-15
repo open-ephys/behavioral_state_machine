@@ -16,7 +16,7 @@ machine_var_list{end+1} = 'LastCycleStartTime'; % Time when the last cycle start
 machine_var_list{end+1} = 'LastCycleLength'; % Time (ms) of last cycle length
 machine_var_list{end+1} = 'AverageCycleLength'; % Average time to cycle (ms)
 machine_var_list{end+1} = 'NumCycles'; % Number of cycles completed
-machine_var_list{end+1} = 'BSMVersion'; % Average time to cycle (ms)
+machine_var_list{end+1} = 'BSMVersion'; % BSM version
 
 %State variables
 machine_var_list{end+1} = 'CurrentStateID'; %ID of current state

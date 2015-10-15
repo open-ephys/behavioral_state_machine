@@ -425,9 +425,6 @@ handles.doPauseMachine = 0;
 handles.doStopMachine = 0;
 my_machine = handles.machine; %local copy of machine so it can be updated
 
-%Open file for writing
-WriteMachineHeader(handles.SaveFID, my_machine);
-
 %Enable stop button
 set(handles.StopMachine, 'enable', 'on');
 %Change button to pause button
@@ -448,6 +445,9 @@ guidata(hObject, handles);
 
 %Initialize state machine (get ready for first trial)
 my_machine = InitializeMachineState(my_machine);
+
+%Open file for writing
+WriteMachineHeader(handles.SaveFID, my_machine);
 
 while (my_machine.Active) && (handles.doRunMachine) && (my_machine.CurrentTrial < my_machine.MaximumTrials),
     

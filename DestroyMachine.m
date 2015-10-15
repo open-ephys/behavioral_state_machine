@@ -9,17 +9,36 @@ function machine = DestroyMachine(machine)
 
 if machine.IsDAQInitialized,
     for i = 1:machine.NumInputDAQSession,
-        machine.InputDAQSession(i).stop;
+        fprintf('Cleaning up analog inputs...\n');
+        while machine.InputDAQSession(i).IsRunning,
+            machine.InputDAQSession(i).stop;
+        end
         machine.InputDAQSession(i).release;
     end
     for i = 1:machine.NumDigitalInputObject,
+        fprintf('Cleaning up digital inputs...\n');
         stop(machine.DigitalInputObject(i));
     end
     for i = 1:machine.NumAnalogOutputs,
-        machine.AnalogOutputs(i).DAQSession.stop;
+        fprintf('Cleaning up analog outputs...\n');
+        while machine.AnalogOutputs(i).DAQSession.IsRunning,
+            machine.AnalogOutputs(i).DAQSession.stop;
+        end
         machine.AnalogOutputs(i).DAQSession.release;
     end
+    for i = 1:machine.NumCounterOutputs,
+        fprintf('Cleaning up counter outputs...\n');
+        while machine.CounterOutputs(i).DAQSession.IsRunning && ~machine.CounterOutputs(i).DAQSession.IsDone,
+            try
+                machine.CounterOutputs(i).DAQSession.stop;
+            catch err
+                fprintf('STUPID NIDAQ\n');
+            end
+        end
+        machine.CounterOutputs(i).DAQSession.release;
+    end
     for i = 1:machine.NumDigitalOutputs,
+        fprintf('Cleaning up digital outputs...\n');
         stop(machine.DigitalOutputs(i).DigitalOutputObject);
     end
     machine.IsDAQInitialized = 0;
