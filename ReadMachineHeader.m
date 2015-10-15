@@ -97,6 +97,27 @@ for cur_state = 1:machine.NumStates,
         machine.States(cur_state).AnalogOutput(cur_output).AOIndex = fread(fid, 1, 'uint32');
     end %analog output loop
     
+    % Read this state's counter outputs
+    machine.States(cur_state).NumCounterOutput = fread(fid, 1, 'double'); %# of counter outputs
+    for cur_output = 1:machine.States(cur_state).NumCounterOutput,
+        % Channel
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).CounterOutput(cur_output).Channel = char(fread(fid, str_len, 'char*1')');
+        %Data
+        str_len = fread(fid, 1, 'uint32'); machine.States(cur_state).CounterOutput(cur_output).Data = char(fread(fid, str_len, 'char*1')');
+        %ForceStop
+        machine.States(cur_state).CounterOutput(cur_output).ForceStop = fread(fid, 1, 'uint8');
+        %doContinuous
+        if machine.BSMVersion >= 0.3,   
+            if machine.BSMVersion == 1,
+                warning('Not loading doContinuousUpdates flag because of bug in LoadXMLBSM that was initializing the BSM version to 1.0.  You might want to remove this if actually loading 1.0 machines.')
+            else
+                machine.States(cur_state).CounterOutput(cur_output).doContinuousUpdates = fread(fid, 1, 'uint8');
+            end
+        end
+        %AOIndex
+        machine.States(cur_state).CounterOutput(cur_output).COIndex = fread(fid, 1, 'uint32');
+    end %counter output loop
+    
     % Read this state's digital outputs
     machine.States(cur_state).NumDigitalOutput = fread(fid, 1, 'double'); %# of digital outputs
     for cur_output = 1:machine.States(cur_state).NumDigitalOutput,
@@ -154,6 +175,29 @@ for cur_output = 1:machine.NumAnalogOutputs,
         str_len = fread(fid, 1, 'uint32'); machine.AnalogOutputs(cur_output).SourceParameters{i} = char(fread(fid, str_len, 'char*1')');
     end
 end %analog output loop
+
+%Counter outputs
+machine.NumCounterOutputs = fread(fid, 1, 'uint32');
+for cur_output = 1:machine.NumAnalogOutputs,
+    %Name
+    str_len = fread(fid, 1, 'uint32'); machine.CounterOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');
+    %Source name
+    str_len = fread(fid, 1, 'uint32'); machine.CounterOutputs(cur_output).SourceName = char(fread(fid, str_len, 'char*1')');
+    %Source type
+    str_len = fread(fid, 1, 'uint32'); machine.CounterOutputs(cur_output).SourceType = char(fread(fid, str_len, 'char*1')');
+    %Source rate
+    machine.CounterOutputs(cur_output).SourceRate = fread(fid, 1, 'double');
+    %Default value
+    machine.CounterOutputs(cur_output).DefaultValue = fread(fid, 1, 'double');
+    %Channel(s)
+    num_chan = fread(fid, 1, 'uint32');
+    machine.CounterOutputs(cur_output).Channel = fread(fid, num_chan, 'uint32');
+    %Source parameters
+    num_param = fread(fid, 1, 'uint32');
+    for i = 1:num_param,
+        str_len = fread(fid, 1, 'uint32'); machine.CounterOutputs(cur_output).SourceParameters{i} = char(fread(fid, str_len, 'char*1')');
+    end
+end %counter output loop
 
 %Digital outputs
 machine.NumDigitalOutputs = fread(fid, 1, 'uint32');
