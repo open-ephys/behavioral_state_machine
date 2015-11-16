@@ -178,7 +178,7 @@ end %analog output loop
 
 %Counter outputs
 machine.NumCounterOutputs = fread(fid, 1, 'uint32');
-for cur_output = 1:machine.NumAnalogOutputs,
+for cur_output = 1:machine.NumCounterOutputs,
     %Name
     str_len = fread(fid, 1, 'uint32'); machine.CounterOutputs(cur_output).Name = char(fread(fid, str_len, 'char*1')');
     %Source name
