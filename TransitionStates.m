@@ -77,6 +77,9 @@ for output_ind = 1:machine.States(to_state).NumCounterOutput,
     machine.CounterOutputs(cur_co_ind).CurData = cur_data;
 end
 
+%Set trial start time to now
+machine.TimeEnterState = GetSecs; % Time entered current state
+
 %Start analog outputs as quickly as possible
 for output_ind = 1:machine.States(to_state).NumAnalogOutput,
     if (machine.States(to_state).AnalogOutput(output_ind).doContinuousUpdates), continue; end %skip continuously updated channels
@@ -89,7 +92,6 @@ for output_ind = 1:machine.States(to_state).NumCounterOutput,
         machine.CounterOutputs(machine.States(to_state).CounterOutput(output_ind).COIndex).DAQSession.startBackground();
     end
 end
-
 
 %Send digital codes (after as they are usually used to timestamp/sync with other systems)
 didStrobe = 0; didTrue = 0;
@@ -104,9 +106,6 @@ for output_ind = 1:machine.States(to_state).NumDigitalOutput,
     didStrobe = didStrobe | machine.States(to_state).DigitalOutput(output_ind).doStrobe;
     didTrue = didTrue | machine.States(to_state).DigitalOutput(output_ind).doTrue;
 end
-
-%Set trial start time to now
-machine.TimeEnterState = GetSecs; % Time entered current state
 
 %Do we need to re-set any strobe bits or monitor any 'true' digital outputs?
 while didStrobe | didTrue,
