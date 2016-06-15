@@ -102,7 +102,7 @@ end %initialize function calls function
 function cur_func_str = ReplaceVariables(cur_func_str, var_list, machine_var_list)
 
 %Extract variable strings
-[token_strings, token_extents] = regexp(cur_func_str, '[^a-zA-Z]*(\w+)[^a-zA-Z]*', 'tokens', 'tokenExtents');
+[token_strings, token_extents] = regexp(cur_func_str, '[^a-zA-Z'']*([''\w]+)[^a-zA-Z'']*', 'tokens', 'tokenExtents');
 
 %Check to see if user-defined variables are included
 for cur_token = 1:length(token_strings),

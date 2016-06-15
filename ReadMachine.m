@@ -7,6 +7,9 @@ tfid = [];
 if ischar(fid) && exist(fid, 'file'),
     tfid = fid;
     fid = fopen(fid);
+else
+    machine = [];
+    return;
 end
 
 %Reset FID to beginning of the file
