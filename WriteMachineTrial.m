@@ -125,11 +125,11 @@ for cur_var = 1:num_vars,
                     for i = 1:ndims(cur_cell_val), fwrite(fid, var_size(i), 'uint32'); end
                     %Write all of the values (in serial order)
                     fwrite(fid, cur_cell_val(:), 'double');
-                elseif ischar(cur_cell_var),
+                elseif ischar(cur_cell_val),
                     fwrite(fid, 21, 'uint8'); %String data type in cell
                     fwrite(fid, length(cur_cell_val), 'uint32');
                     fwrite(fid, cur_cell_val, 'char*1');
-                elseif islogical(cur_cell_var),
+                elseif islogical(cur_cell_val),
                     fwrite(fid, 23, 'uint8'); %Logical data type in cell
                     %# dimensions
                     fwrite(fid, ndims(cur_cell_val), 'uint8');
